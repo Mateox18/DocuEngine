@@ -1,0 +1,20 @@
+# Python virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# JetBrains IDEs
+.idea/
+
+# VS Code
+.vscode/
+
+# Editor swap/backup files
+*.swp
+*.swo
+*~
+
+# OS metadata
+.DS_Store
+Thumbs.db
