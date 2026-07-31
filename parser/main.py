@@ -1,0 +1,2 @@
+#TODO este debe ser el loader que debe llamar a selector.py para que parsee los documentos segun su tipo
+#TODO despues debe llamar al cleaning pipeline y finalmente retornar los ParsedDocuments de models.py
