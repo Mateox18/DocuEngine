@@ -1,7 +1,7 @@
 from abc import abstractmethod
 
 
-class Parser(object):
+class base:
     def __init__(self):
         pass
     @abstractmethod
