@@ -1,0 +1,16 @@
+[project]
+name = "codefest-parser"
+version = "0.1.0"
+description = "Capa de ingesta (parseo y limpieza) para CODEFEST AD ASTRA 2026"
+# Sin [build-system]: el proyecto no se empaqueta ni se instala. `requires-python`
+# esta aqui para documentar que en Python <=3.9 la carpeta `parser` colisionaria
+# con el modulo homonimo de la stdlib, eliminado en 3.10.
+requires-python = ">=3.11"
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+# Ancla el rootdir en la raiz del repo y pone "." en sys.path, para que
+# `import parser` resuelva tambien con `pytest` a secas.
+pythonpath = ["."]
+testpaths = ["tests"]
+addopts = "-q --strict-markers"

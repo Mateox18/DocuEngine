@@ -1,23 +1,135 @@
+"""Modelos de la representacion intermedia del pipeline de parseo.
+
+Los parsers EXTRAEN y ESTRUCTURAN; la limpieza (NFKC, colapso de espacios,
+deteccion de idioma, de-hyphenation) es responsabilidad de la capa cleaning/
+posterior. Un parser nunca debe llenar `idioma`, `hash_contenido` ni
+`descartado`.
+"""
+
+from __future__ import annotations
+
 from dataclasses import dataclass, field
+from typing import Any, Literal, get_args
+
+TipoBloque = Literal[
+    "heading",
+    "paragraph",
+    "table_row",
+    "caption",
+    "list_item",
+    "cell",
+    "ocr_text",
+    "feature",
+]
+TIPOS_BLOQUE: frozenset[str] = frozenset(get_args(TipoBloque))
+
+# El pliego (Tabla 1) restringe el formato a pdf|html|md, pero el corpus real
+# incluye json, csv, xlsx, pbf e imagenes. Decision provisional: `formato`
+# guarda el formato REAL y formato_pliego() mapea al conjunto permitido cuando
+# haya que emitir la metadata final.
+# TODO(pliego): confirmar el mapeo con la organizacion del reto.
+FORMATOS_PLIEGO: frozenset[str] = frozenset({"pdf", "html", "md"})
+_MAPA_PLIEGO: dict[str, str] = {
+    "pdf": "pdf",
+    "html": "html",
+    "htm": "html",
+    "xml": "html",
+    "md": "md",
+    "markdown": "md",
+    "txt": "md",
+    "json": "md",
+    "jsonl": "md",
+    "csv": "md",
+    "tsv": "md",
+    "xlsx": "md",
+    "xls": "md",
+    "imagen": "md",
+    "pbf": "md",
+}
+_FORMATO_PLIEGO_POR_DEFECTO = "md"
+
 
 @dataclass
 class Block:
     """Unidad estructural del documento."""
-    # Tipo del bloque (heading, paragraph, table, caption...)
-    tipo: str
-    texto: str
-    # Para markdown y html
-    nivel: int | None = None
 
-@dataclass
+    tipo: TipoBloque
+    texto: str
+    # Nivel de encabezado (1-6). Solo para tipo="heading"; None en el resto.
+    nivel: int | None = None
+    # Trazabilidad al origen; claves libres segun formato.
+    #   PDF   -> {"pagina": 12, "bbox": [x0, y0, x1, y1]}
+    #   HTML  -> {"xpath": "/html/body/div[2]/p[5]"}
+    #   XLSX  -> {"hoja": "Data", "fila": 340}
+    #   texto -> {"linea": 41, "linea_fin": 43}
+    ancla: dict[str, Any] = field(default_factory=dict)
+    # ISO 639-1. Lo llena cleaning; el parser lo deja en None.
+    idioma: str | None = None
+    # Ruta de encabezados ANCESTROS. Nunca incluye el texto del propio bloque,
+    # tampoco cuando el bloque es un heading.
+    seccion_path: list[str] = field(default_factory=list)
+    descartado: bool = False
+    motivo_descarte: str | None = None
+
+    def __post_init__(self) -> None:
+        """Valida el tipo en runtime (un Literal no se comprueba solo)."""
+        if self.tipo not in TIPOS_BLOQUE:
+            raise ValueError(f"tipo de bloque no permitido: {self.tipo!r}")
+
+
+@dataclass(kw_only=True)
 class ParsedDocument:
-    """Representación intermedia de un documento parseado."""
-    # Metadata del documento
+    """Representacion intermedia de un documento parseado.
+
+    kw_only=True: se construye en un unico sitio (BaseParser._nuevo_documento),
+    asi que la ergonomia posicional no aporta nada, y evita intercambiar por
+    error doc_id/fuente/formato/ruta_original, que son los cuatro str.
+    """
+
     doc_id: str
+    # CRITICO: nombre EXACTO del archivo original (path.name), sin lower(),
+    # sin strip, sin normalizacion Unicode. Clave de emparejamiento del reto.
     fuente: str
+    # Formato real: pdf|html|md|txt|json|csv|xlsx|imagen|pbf
     formato: str
     fenomeno: int
-    titulo: str | None = None
+    ruta_original: str
 
-    # Contenido estructurado
+    titulo: str | None = None
+    idioma: str | None = None  # dominante; lo llena cleaning
+    hash_contenido: str | None = None  # SHA-256; lo llena cleaning
+    meta_extra: dict[str, Any] = field(default_factory=dict)
+    errores: list[str] = field(default_factory=list)
+
     blocks: list[Block] = field(default_factory=list)
+
+    def bloques_activos(self) -> list[Block]:
+        """Bloques no descartados, en orden de lectura."""
+        return [b for b in self.blocks if not b.descartado]
+
+    def texto_completo(self) -> str:
+        """Texto de los bloques activos unido por linea en blanco."""
+        return "\n\n".join(b.texto for b in self.bloques_activos())
+
+    def num_palabras(self) -> int:
+        """Palabras aproximadas del texto activo (split por espacios)."""
+        return len(self.texto_completo().split())
+
+    def formato_pliego(self) -> str:
+        """Mapea el formato real al conjunto pdf|html|md que exige el pliego."""
+        return _MAPA_PLIEGO.get(self.formato, _FORMATO_PLIEGO_POR_DEFECTO)
+
+
+@dataclass
+class ErrorParseo:
+    """Registro de un fallo aislado al parsear un archivo. El pipeline sigue.
+
+    Es un REGISTRO de datos, no una excepcion: la excepcion es
+    parsers.base.ParserError. (En el documento del reto figura como
+    `ParseError`; renombrado para no colisionar con `ParserError`.)
+    """
+
+    ruta: str
+    formato: str
+    excepcion: str
+    traceback: str
