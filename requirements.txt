@@ -1,0 +1,22 @@
+# Runtime de la capa de parseo.
+# Ninguna de estas librerias hace peticiones de red en el flujo del pipeline:
+# a trafilatura se le pasa siempre contenido en memoria, nunca `url=` ni
+# fetch_url(). Hay un test que lo verifica parcheando socket.socket.
+
+# --- HTML ---
+trafilatura>=2.0,<3
+readability-lxml>=0.8.1,<0.9   # import: `from readability import Document`.
+                               # NO instalar el paquete `readability`: es otro
+                               # proyecto distinto con el mismo nombre de import.
+beautifulsoup4>=4.12,<5
+lxml>=5.3,<7                   # 5.3.0 es la primera con ruedas cp313; con <5.3
+                               # pip intenta compilar desde fuente en Windows.
+
+# --- Tabular ---
+openpyxl>=3.1.5,<4
+xlrd>=2.0,<3                   # solo para .xls legado; el import va guardado y
+                               # el parser degrada con un mensaje accionable.
+
+# Sin pandas a proposito: la especificacion prohibe inferir tipos y las filas se
+# recorren de una en una, asi que csv/openpyxl en modo iterador dan lo mismo sin
+# arrastrar numpy, y ademas resuelven el limite de 50.000 filas por streaming.

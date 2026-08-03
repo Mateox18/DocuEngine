@@ -14,7 +14,7 @@ import os
 import traceback
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Any, ClassVar
+from typing import Any, ClassVar, Protocol
 
 from parser.models import Block, ErrorParseo, ParsedDocument, TipoBloque
 
@@ -23,6 +23,48 @@ logger = logging.getLogger(__name__)
 
 class ParserError(Exception):
     """Error irrecuperable al parsear un archivo concreto."""
+
+
+class FabricaBloques(Protocol):
+    """Firma de BaseParser._bloque.
+
+    La usan los motores compartidos (markdown_blocks) para construir bloques sin
+    depender de una instancia de parser, y permite que un parser inyecte su
+    propia fabrica si algun dia necesita enriquecer los bloques.
+    """
+
+    def __call__(
+        self,
+        tipo: TipoBloque,
+        texto: str,
+        *,
+        nivel: int | None = None,
+        ancla: dict[str, Any] | None = None,
+        seccion_path: list[str] | None = None,
+    ) -> Block: ...
+
+
+def crear_bloque(
+    tipo: TipoBloque,
+    texto: str,
+    *,
+    nivel: int | None = None,
+    ancla: dict[str, Any] | None = None,
+    seccion_path: list[str] | None = None,
+) -> Block:
+    """Crea un Block copiando ancla y seccion_path.
+
+    La copia no es cosmetica: los parsers pasan aqui la pila viva de secciones,
+    y sin copiar todos los bloques compartirian la misma lista y cada pop() los
+    corromperia retroactivamente.
+    """
+    return Block(
+        tipo=tipo,
+        texto=texto,
+        nivel=nivel,
+        ancla=dict(ancla) if ancla else {},
+        seccion_path=list(seccion_path) if seccion_path else [],
+    )
 
 
 class BaseParser(ABC):
@@ -112,16 +154,7 @@ class BaseParser(ABC):
         ancla: dict[str, Any] | None = None,
         seccion_path: list[str] | None = None,
     ) -> Block:
-        """Crea un Block copiando ancla y seccion_path.
-
-        La copia no es cosmetica: los parsers pasan aqui la pila viva de
-        secciones, y sin copiar todos los bloques compartirian la misma lista
-        y cada pop() los corromperia retroactivamente.
-        """
-        return Block(
-            tipo=tipo,
-            texto=texto,
-            nivel=nivel,
-            ancla=dict(ancla) if ancla else {},
-            seccion_path=list(seccion_path) if seccion_path else [],
+        """Crea un Block. Delega en crear_bloque (una sola implementacion)."""
+        return crear_bloque(
+            tipo, texto, nivel=nivel, ancla=ancla, seccion_path=seccion_path
         )
