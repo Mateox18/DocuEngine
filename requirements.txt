@@ -3,6 +3,9 @@
 # a trafilatura se le pasa siempre contenido en memoria, nunca `url=` ni
 # fetch_url(). Hay un test que lo verifica parcheando socket.socket.
 
+# --- Limpieza ---
+ftfy>=6.2,<7
+
 # --- HTML ---
 trafilatura>=2.0,<3
 readability-lxml>=0.8.1,<0.9   # import: `from readability import Document`.
