@@ -6,6 +6,7 @@ import pytest
 
 from parser.models import (
     FORMATOS_PLIEGO,
+    SCHEMA_VERSION,
     Block,
     ErrorParseo,
     ParsedDocument,
@@ -39,6 +40,45 @@ def test_defaults_mutables_no_se_comparten() -> None:
 def test_tipo_de_bloque_invalido_lanza_valueerror() -> None:
     with pytest.raises(ValueError, match="tipo de bloque no permitido"):
         Block("table-row", "x")
+
+
+def test_block_to_dict_y_from_dict_round_trip() -> None:
+    bloque = Block(
+        "heading",
+        "Resumen",
+        nivel=2,
+        ancla={"linea": 10},
+        idioma="es",
+        seccion_path=["Informe"],
+        descartado=True,
+        motivo_descarte="duplicado",
+    )
+
+    datos = bloque.to_dict()
+    reconstruido = Block.from_dict(datos)
+
+    assert datos == {
+        "tipo": "heading",
+        "texto": "Resumen",
+        "nivel": 2,
+        "ancla": {"linea": 10},
+        "idioma": "es",
+        "seccion_path": ["Informe"],
+        "descartado": True,
+        "motivo_descarte": "duplicado",
+    }
+    assert reconstruido == bloque
+
+
+def test_block_to_dict_no_expone_mutables_internos() -> None:
+    bloque = Block("paragraph", "texto", ancla={"linea": 1}, seccion_path=["A"])
+    datos = bloque.to_dict()
+
+    datos["ancla"]["linea"] = 99
+    datos["seccion_path"].append("B")
+
+    assert bloque.ancla == {"linea": 1}
+    assert bloque.seccion_path == ["A"]
 
 
 def test_parsed_document_es_kw_only() -> None:
@@ -107,6 +147,60 @@ def test_formato_pliego_mapeo(formato: str, esperado: str) -> None:
     assert resultado in FORMATOS_PLIEGO
 
 
+def test_parsed_document_to_dict_y_from_dict_round_trip() -> None:
+    doc = _documento(
+        titulo="Informe",
+        idioma="es",
+        hash_contenido="abc123",
+        meta_extra={"autor": "Equipo"},
+        errores=["warning"],
+        blocks=[
+            Block("heading", "Informe", nivel=1),
+            Block("paragraph", "Contenido", ancla={"linea": 3}),
+        ],
+    )
+
+    datos = doc.to_dict()
+    reconstruido = ParsedDocument.from_dict(datos)
+
+    assert datos["schema_version"] == SCHEMA_VERSION
+    assert datos["blocks"] == [bloque.to_dict() for bloque in doc.blocks]
+    assert reconstruido == doc
+
+
+def test_parsed_document_from_dict_exige_schema_version() -> None:
+    datos = _documento().to_dict()
+    datos.pop("schema_version")
+
+    with pytest.raises(ValueError, match="schema_version no soportado"):
+        ParsedDocument.from_dict(datos)
+
+
+def test_parsed_document_from_dict_rechaza_schema_version_incompatible() -> None:
+    datos = _documento().to_dict()
+    datos["schema_version"] = SCHEMA_VERSION + 1
+
+    with pytest.raises(ValueError, match="schema_version no soportado"):
+        ParsedDocument.from_dict(datos)
+
+
+def test_parsed_document_to_dict_no_expone_mutables_internos() -> None:
+    doc = _documento(
+        meta_extra={"tema": "orbita"},
+        errores=["uno"],
+        blocks=[Block("paragraph", "texto", ancla={"linea": 1})],
+    )
+
+    datos = doc.to_dict()
+    datos["meta_extra"]["tema"] = "cambiado"
+    datos["errores"].append("dos")
+    datos["blocks"][0]["ancla"]["linea"] = 99
+
+    assert doc.meta_extra == {"tema": "orbita"}
+    assert doc.errores == ["uno"]
+    assert doc.blocks[0].ancla == {"linea": 1}
+
+
 def test_error_parseo_campos() -> None:
     err = ErrorParseo(
         ruta="D:/corpus/roto.pdf",
@@ -119,3 +213,22 @@ def test_error_parseo_campos() -> None:
     assert err.formato == "pdf"
     assert err.excepcion.startswith("ValueError")
     assert "Traceback" in err.traceback
+
+
+def test_error_parseo_to_dict_y_from_dict_round_trip() -> None:
+    err = ErrorParseo(
+        ruta="D:/corpus/roto.pdf",
+        formato="pdf",
+        excepcion="ValueError: xref invalido",
+        traceback="Traceback (most recent call last): ...",
+    )
+
+    datos = err.to_dict()
+
+    assert datos == {
+        "ruta": "D:/corpus/roto.pdf",
+        "formato": "pdf",
+        "excepcion": "ValueError: xref invalido",
+        "traceback": "Traceback (most recent call last): ...",
+    }
+    assert ErrorParseo.from_dict(datos) == err

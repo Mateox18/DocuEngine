@@ -22,7 +22,8 @@ TipoBloque = Literal[
     "feature",
 ]
 TIPOS_BLOQUE: frozenset[str] = frozenset(get_args(TipoBloque))
-
+# Esta version debe actualizarse cada vez que se actualice el esquema de parseo.
+SCHEMA_VERSION = 1
 # El pliego (Tabla 1) restringe el formato a pdf|html|md, pero el corpus real
 # incluye json, csv, xlsx, pbf e imagenes. Decision provisional: `formato`
 # guarda el formato REAL y formato_pliego() mapea al conjunto permitido cuando
@@ -72,9 +73,26 @@ class Block:
     motivo_descarte: str | None = None
 
     def __post_init__(self) -> None:
-        """Valida el tipo en runtime (un Literal no se comprueba solo)."""
+        """Válida el tipo en runtime (un Literal no se comprueba solo)."""
         if self.tipo not in TIPOS_BLOQUE:
             raise ValueError(f"tipo de bloque no permitido: {self.tipo!r}")
+    def to_dict(self) -> dict[str, Any]:
+        """Serializa el bloque a un dict JSON-nativo."""
+        return {
+            "tipo": self.tipo,
+            "texto": self.texto,
+            "nivel": self.nivel,
+            "ancla": dict(self.ancla),
+            "idioma": self.idioma,
+            "seccion_path": list(self.seccion_path),
+            "descartado": self.descartado,
+            "motivo_descarte": self.motivo_descarte,
+        }
+
+    @classmethod
+    def from_dict(cls, datos: dict[str, Any]) -> Block:
+        """Reconstruye un bloque producido por to_dict()."""
+        return cls(**datos)
 
 
 @dataclass(kw_only=True)
@@ -119,6 +137,36 @@ class ParsedDocument:
         """Mapea el formato real al conjunto pdf|html|md que exige el pliego."""
         return _MAPA_PLIEGO.get(self.formato, _FORMATO_PLIEGO_POR_DEFECTO)
 
+    def to_dict(self) -> dict[str, Any]:
+        """Serializa el documento a un dict JSON-nativo."""
+        return {
+            "schema_version": SCHEMA_VERSION,
+            "doc_id": self.doc_id,
+            "fuente": self.fuente,
+            "formato": self.formato,
+            "fenomeno": self.fenomeno,
+            "ruta_original": self.ruta_original,
+            "titulo": self.titulo,
+            "idioma": self.idioma,
+            "hash_contenido": self.hash_contenido,
+            "meta_extra": dict(self.meta_extra),
+            "errores": list(self.errores),
+            "blocks": [bloque.to_dict() for bloque in self.blocks],
+        }
+
+    @classmethod
+    def from_dict(cls, datos: dict[str, Any]) -> ParsedDocument:
+        """Reconstruye un documento producido por to_dict()."""
+        datos = dict(datos)
+        version = datos.pop("schema_version", None)
+        if version != SCHEMA_VERSION:
+            raise ValueError(
+                f"schema_version no soportado: {version!r}; "
+                f"esperado: {SCHEMA_VERSION}"
+            )
+        datos["blocks"] = [Block.from_dict(bloque) for bloque in datos.get("blocks", [])]
+        return cls(**datos)
+
 
 @dataclass
 class ErrorParseo:
@@ -133,3 +181,17 @@ class ErrorParseo:
     formato: str
     excepcion: str
     traceback: str
+
+    def to_dict(self) -> dict[str, str]:
+        """Serializa el fallo de parseo para logs o reportes JSON."""
+        return {
+            "ruta": self.ruta,
+            "formato": self.formato,
+            "excepcion": self.excepcion,
+            "traceback": self.traceback,
+        }
+
+    @classmethod
+    def from_dict(cls, datos: dict[str, str]) -> ErrorParseo:
+        """Reconstruye un fallo de parseo producido por to_dict()."""
+        return cls(**datos)
