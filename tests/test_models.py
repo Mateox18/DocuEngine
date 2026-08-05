@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import json
+from pathlib import Path
+
 import pytest
 
 from parser.models import (
@@ -166,6 +169,43 @@ def test_parsed_document_to_dict_y_from_dict_round_trip() -> None:
     assert datos["schema_version"] == SCHEMA_VERSION
     assert datos["blocks"] == [bloque.to_dict() for bloque in doc.blocks]
     assert reconstruido == doc
+
+
+def test_to_dict_es_json_serializable() -> None:
+    doc = _documento(
+        meta_extra={"escaneado": True},
+        blocks=[Block("paragraph", "a", ancla={"bbox": [1.0, 2.0]})],
+    )
+
+    json.dumps(doc.to_dict())
+
+
+def test_block_to_dict_rechaza_ancla_no_json_nativa() -> None:
+    bloque = Block("paragraph", "texto", ancla={"ruta": Path("archivo.pdf")})
+
+    with pytest.raises(TypeError, match="Block.ancla.ruta"):
+        bloque.to_dict()
+
+
+def test_block_to_dict_rechaza_tuplas_en_ancla() -> None:
+    bloque = Block("paragraph", "texto", ancla={"bbox": (1.0, 2.0)})
+
+    with pytest.raises(TypeError, match="Block.ancla.bbox"):
+        bloque.to_dict()
+
+
+def test_parsed_document_to_dict_rechaza_meta_extra_no_json_nativo() -> None:
+    doc = _documento(meta_extra={"formatos": {"pdf", "html"}})
+
+    with pytest.raises(TypeError, match="ParsedDocument.meta_extra.formatos"):
+        doc.to_dict()
+
+
+def test_parsed_document_to_dict_rechaza_claves_no_string_en_meta_extra() -> None:
+    doc = _documento(meta_extra={1: "valor"})
+
+    with pytest.raises(TypeError, match="clave no str"):
+        doc.to_dict()
 
 
 def test_parsed_document_from_dict_exige_schema_version() -> None:

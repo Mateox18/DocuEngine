@@ -48,6 +48,24 @@ _MAPA_PLIEGO: dict[str, str] = {
     "pbf": "md",
 }
 _FORMATO_PLIEGO_POR_DEFECTO = "md"
+_JSON_ESCALARES = (str, int, float, bool, type(None))
+
+
+def _validar_json_nativo(valor: Any, ruta: str) -> None:
+    """Valida que un valor use solo tipos JSON nativos del esquema."""
+    if isinstance(valor, _JSON_ESCALARES):
+        return
+    if isinstance(valor, list):
+        for indice, item in enumerate(valor):
+            _validar_json_nativo(item, f"{ruta}[{indice}]")
+        return
+    if isinstance(valor, dict):
+        for clave, item in valor.items():
+            if not isinstance(clave, str):
+                raise TypeError(f"{ruta} contiene una clave no str: {clave!r}")
+            _validar_json_nativo(item, f"{ruta}.{clave}")
+        return
+    raise TypeError(f"{ruta} no es JSON-nativo: {type(valor).__name__}")
 
 
 @dataclass
@@ -78,6 +96,7 @@ class Block:
             raise ValueError(f"tipo de bloque no permitido: {self.tipo!r}")
     def to_dict(self) -> dict[str, Any]:
         """Serializa el bloque a un dict JSON-nativo."""
+        _validar_json_nativo(self.ancla, "Block.ancla")
         return {
             "tipo": self.tipo,
             "texto": self.texto,
@@ -139,6 +158,7 @@ class ParsedDocument:
 
     def to_dict(self) -> dict[str, Any]:
         """Serializa el documento a un dict JSON-nativo."""
+        _validar_json_nativo(self.meta_extra, "ParsedDocument.meta_extra")
         return {
             "schema_version": SCHEMA_VERSION,
             "doc_id": self.doc_id,
