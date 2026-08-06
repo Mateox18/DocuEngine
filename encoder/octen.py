@@ -7,7 +7,7 @@ if torch.backends.mps.is_available():
 else:
     DEVICE = 'cpu'
 
-print(f"Usando device: {DEVICE}")
+print(f"Usando Device: {DEVICE}")
 
 MODEL_NAME = "Octen/Octen-Embedding-8B-INT8"
 
