@@ -187,6 +187,19 @@ class ParsedDocument:
         datos["blocks"] = [Block.from_dict(bloque) for bloque in datos.get("blocks", [])]
         return cls(**datos)
 
+@dataclass
+class BBox:
+    """Bounding box de un elemento en una página.
+
+    Expresado como (x0, y0, x1, y1) siguiendo la convención de PyMuPDF:
+    x0, y0: esquina superior izquierda.
+    x1, y1: esquina inferior derecha.
+    """
+
+    x0: float
+    y0: float
+    x1: float
+    y1: float
 
 @dataclass
 class ErrorParseo:
@@ -215,3 +228,4 @@ class ErrorParseo:
     def from_dict(cls, datos: dict[str, str]) -> ErrorParseo:
         """Reconstruye un fallo de parseo producido por to_dict()."""
         return cls(**datos)
+
