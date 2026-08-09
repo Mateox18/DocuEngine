@@ -20,6 +20,9 @@ openpyxl>=3.1.5,<4
 xlrd>=2.0,<3                   # solo para .xls legado; el import va guardado y
                                # el parser degrada con un mensaje accionable.
 
+# --- PDF ---
+pymupdf>=1.24,<2               # import: `import fitz`.
+
 # Sin pandas a proposito: la especificacion prohibe inferir tipos y las filas se
 # recorren de una en una, asi que csv/openpyxl en modo iterador dan lo mismo sin
 # arrastrar numpy, y ademas resuelven el limite de 50.000 filas por streaming.
@@ -28,3 +31,5 @@ xlrd>=2.0,<3                   # solo para .xls legado; el import va guardado y
 # Aunque el parser base evita pandas/numpy, otros modulos (como encoder/octen.py)
 # los requieren.
 numpy==2.4.3
+torch
+sentence-transformers
