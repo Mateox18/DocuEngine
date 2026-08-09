@@ -31,8 +31,18 @@ pymupdf>=1.24,<2               # import: `import fitz`.
 # Aunque el parser base evita pandas/numpy, otros modulos (como encoder/octen.py)
 # los requieren.
 numpy==2.4.3
-torch
-sentence-transformers
+
+# Wheel de PyTorch con CUDA 13.0, igual al entorno de desarrollo actual
+# (RTX 4070; el driver reporta compatibilidad con CUDA 13.3).
+--extra-index-url https://download.pytorch.org/whl/cu130
+torch==2.13.0+cu130
+sentence-transformers==5.7.0
+
+# Carga y ejecucion del modelo Octen INT8 usado en pruebas/aversifunciona.py.
+# Son dependencias de tiempo de ejecucion del modelo, aunque el script no las
+# importe directamente.
+accelerate==1.14.0
+bitsandbytes==0.50.0
 
 # faiss-cpu: corre en cualquier maquina (Mac sin CUDA incluida). El indice
 # Flat que usa el reto no necesita GPU para el volumen esperado del corpus.

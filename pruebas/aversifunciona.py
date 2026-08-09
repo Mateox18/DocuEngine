@@ -1,7 +1,8 @@
 from sentence_transformers import SentenceTransformer
 from encoder.octen import armar_indice
 from chunker.models import Chunk
-
+import torch
+print(torch.cuda.is_available())
 def chunk_de_prueba(id_, texto):
     return Chunk(id_=id_, doc_id="DOC-1-00001", indice=0, texto=texto, fuente="prueba.md", fenomeno=1)
 
