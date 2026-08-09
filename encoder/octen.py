@@ -8,6 +8,7 @@ from chunker.models import Chunk
 import faiss
 import json
 
+"""
 if torch.backends.mps.is_available():
     DEVICE = 'mps'
 else:
@@ -20,6 +21,7 @@ MODEL_NAME = "Octen/Octen-Embedding-8B-INT8"
 model = SentenceTransformer(MODEL_NAME, device=DEVICE)
 
 print("Modelo cargado")
+"""
 
 
 def validar_ids(chunks: list[Chunk]) -> None:
