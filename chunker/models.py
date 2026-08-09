@@ -7,8 +7,9 @@ from typing import Any
 class Chunk:
     """Unidad mínima de información para recuperación semántica.
     
-    Contiene el texto, su embedding y metadatos denormalizados del documento
-    original para permitir respuestas rápidas y trazabilidad.
+    Contiene el texto y metadatos denormalizados del documento original para
+    permitir respuestas rápidas y trazabilidad. El embedding se gestiona
+    en memoria pero se omite en persistencia para evitar duplicidad con FAISS.
     """
     # 1. Identificadores y Trazabilidad
     id_: str                # ID único (puede ser hash del contenido o UUID)
@@ -32,12 +33,15 @@ class Chunk:
     meta_extra: dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        """Serializa el chunk a un formato compatible con bases vectoriales."""
+        """Serializa el chunk a un formato compatible con bases vectoriales.
+        
+        NOTA: No incluye el embedding para evitar duplicidad; se asume que
+        este se guarda en el índice vectorial (FAISS).
+        """
         return {
             "id_": self.id_,
             "doc_id": self.doc_id,
             "texto": self.texto,
-            "embedding": self.embedding,
             "metadata": {
                 "fuente": self.fuente,
                 "fenomeno": self.fenomeno,
@@ -61,7 +65,6 @@ class Chunk:
             id_=datos["id_"],
             doc_id=datos["doc_id"],
             texto=datos["texto"],
-            embedding=datos.get("embedding"),
             fuente=meta.get("fuente", ""),
             fenomeno=meta.get("fenomeno", 0),
             indice=meta.get("indice", 0),

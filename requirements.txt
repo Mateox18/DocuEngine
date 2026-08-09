@@ -1,4 +1,4 @@
-# Runtime de la capa de parseo.
+# Runtime de la capa de parseo y componentes del entorno.
 # Ninguna de estas librerias hace peticiones de red en el flujo del pipeline:
 # a trafilatura se le pasa siempre contenido en memoria, nunca `url=` ni
 # fetch_url(). Hay un test que lo verifica parcheando socket.socket.
@@ -11,7 +11,7 @@ trafilatura>=2.0,<3
 readability-lxml>=0.8.1,<0.9   # import: `from readability import Document`.
                                # NO instalar el paquete `readability`: es otro
                                # proyecto distinto con el mismo nombre de import.
-beautifulsoup4>=4.12,<5
+beautifulsoup4==4.14.2
 lxml>=5.3,<7                   # 5.3.0 es la primera con ruedas cp313; con <5.3
                                # pip intenta compilar desde fuente en Windows.
 
@@ -23,3 +23,14 @@ xlrd>=2.0,<3                   # solo para .xls legado; el import va guardado y
 # Sin pandas a proposito: la especificacion prohibe inferir tipos y las filas se
 # recorren de una en una, asi que csv/openpyxl en modo iterador dan lo mismo sin
 # arrastrar numpy, y ademas resuelven el limite de 50.000 filas por streaming.
+
+# --- Componentes del entorno (Encoder / API / DB) ---
+# Aunque el parser base evita pandas/numpy, otros modulos (como encoder/octen.py)
+# o la integracion con servicios externos los requieren.
+numpy==2.4.3
+pandas==3.0.1
+fastapi==0.128.1
+uvicorn==0.40.0
+pydantic==2.12.5
+requests==2.32.5
+oracledb==3.4.2
