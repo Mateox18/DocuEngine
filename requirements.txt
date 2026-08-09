@@ -31,5 +31,12 @@ pymupdf>=1.24,<2               # import: `import fitz`.
 # Aunque el parser base evita pandas/numpy, otros modulos (como encoder/octen.py)
 # los requieren.
 numpy==2.4.3
+<<<<<<< HEAD
 torch
 sentence-transformers
+=======
+
+# faiss-cpu: corre en cualquier maquina (Mac sin CUDA incluida). El indice
+# Flat que usa el reto no necesita GPU para el volumen esperado del corpus.
+faiss-cpu==1.15.0
+>>>>>>> 71fa25c (ya casi)
