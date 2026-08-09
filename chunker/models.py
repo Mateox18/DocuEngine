@@ -12,7 +12,7 @@ class Chunk:
     en memoria pero se omite en persistencia para evitar duplicidad con FAISS.
     """
     # 1. Identificadores y Trazabilidad
-    id_: str                # ID único (puede ser hash del contenido o UUID)
+    id_: int                # ID único (puede ser hash del contenido o UUID)
     doc_id: str             # Referencia al ParsedDocument original
     indice: int             # Posición del chunk dentro del documento para mantener el orden
     
