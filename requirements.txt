@@ -26,11 +26,5 @@ xlrd>=2.0,<3                   # solo para .xls legado; el import va guardado y
 
 # --- Componentes del entorno (Encoder / API / DB) ---
 # Aunque el parser base evita pandas/numpy, otros modulos (como encoder/octen.py)
-# o la integracion con servicios externos los requieren.
+# los requieren.
 numpy==2.4.3
-pandas==3.0.1
-fastapi==0.128.1
-uvicorn==0.40.0
-pydantic==2.12.5
-requests==2.32.5
-oracledb==3.4.2
