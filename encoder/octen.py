@@ -6,6 +6,7 @@ import numpy as np
 from sentence_transformers import SentenceTransformer
 from chunker.models import Chunk
 import faiss
+faiss.omp_set_num_threads(1)
 import json
 
 """
