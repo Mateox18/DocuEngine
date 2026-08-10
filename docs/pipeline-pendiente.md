@@ -25,7 +25,7 @@ parser/
     tabular_parser.py          .csv .tsv .xlsx .xls
 ```
 
-Pendiente: `cleaning/` completo, `selector.py`, `main.py`, `qa_report.py`, y los parsers de PDF, imagen y PBF.
+Pendiente: `selector.py`, `main.py`, `qa_report.py`, y los parsers de imagen y PBF. `cleaning/` y el parser de PDF ya están implementados.
 
 ### API existente que hay que respetar
 
@@ -174,7 +174,7 @@ def test_to_dict_es_json_serializable() -> None:
 
 def test_round_trip_to_dict_from_dict() -> None:
     doc = _documento(
-        titulo="T", meta_extra={"escaneado": True}, errores=["aviso"],
+        titulo="T", meta_extra={"origen": "pdf"}, errores=["aviso"],
         blocks=[Block("heading", "Á", nivel=1, ancla={"pagina": 3},
                       seccion_path=["X"], descartado=True, motivo_descarte="calidad")],
     )
@@ -186,11 +186,11 @@ def test_to_dict_incluye_schema_version() -> None:
 
 ---
 
-## Parte B — `parser/cleaning/`
+## Parte B — `parser/cleaning/` — implementado
 
-Capa común: se aplica idéntica a todos los `ParsedDocument` sin importar de qué parser vengan. **El orden de las operaciones importa.**
+Capa común implementada: se aplica idéntica a todos los `ParsedDocument` sin importar de qué parser vengan. **El orden de las operaciones importa.**
 
-Crear `parser/cleaning/__init__.py` con docstring y **sin imports** (misma razón que en `parsers/`: evitar ciclos y no forzar la carga de ftfy/langdetect al importar el paquete).
+`parser/cleaning/__init__.py` conserva solo el docstring y **sin imports** (misma razón que en `parsers/`: evitar ciclos y no forzar la carga de ftfy/langdetect al importar el paquete).
 
 ### B.1 `parser/cleaning/normalize.py`
 
@@ -1398,7 +1398,7 @@ def _asserts(documentos: list[ParsedDocument]) -> None:
 
 Los tres siguen las mismas reglas: heredan de `BaseParser`, usan `self._bloque`, no limpian, y llenan `fuente` con `path.name` exacto vía `_nuevo_documento`.
 
-### F.1 `parsers/pdf_parser.py`
+### F.1 `parsers/pdf_parser.py` — implementado
 
 ```python
 class PdfParser(BaseParser):
@@ -1406,25 +1406,24 @@ class PdfParser(BaseParser):
     FORMATO = "pdf"
 ```
 
-Orden de operaciones:
+El parser implementado usa `PyMuPDF` y sigue este flujo:
 
-1. **Escaneado.** Texto de las 5 primeras páginas; media < 50 caracteres/página → `meta_extra["escaneado"] = True`. Si `ocrmypdf` está disponible, copia OCR en temporal con `-l spa+eng+por --deskew --optimize 0` y se parsea esa; si no, se anota en `errores` y se devuelve lo que haya.
-2. **Bloques con coordenadas.** `page.get_text("blocks")`, nunca `get_text("text")`: se perdería la geometría que necesitan los pasos 3 y 4.
-3. **Columnas.** k-means (k=1 y k=2) sobre `x0`. Si dos clusters explican la distribución y sus centros están claramente separados, emitir la columna izquierda completa de arriba abajo y luego la derecha. Registrar en `meta_extra["paginas_dos_columnas"]`.
-4. **Cabeceras y pies.** Descartar si se cumplen **ambas**: (a) `y0 < 0.07·alto` o `y1 > 0.93·alto`; (b) el texto normalizado se repite en ≥3 páginas. La doble condición evita borrar títulos legítimos que caen arriba de página.
-5. **Índices.** Patrón `r"\.{4,}\s*\d+\s*$"`; si >40 % de las líneas de una página lo cumplen, descartar la página entera.
-6. **Tablas.** `pdfplumber.extract_tables()` en las páginas con estructura tabular; cada fila vía **`tablas.linealizar_fila`** (la función que ya existe), emitida como `table_row`. No mezclar con la prosa.
-7. **Captions.** Bloques que empiezan por `Figura|Figure|Gráfico|Tabla|Table|Cuadro` + número → `tipo="caption"`.
-8. **Encabezados.** Tamaño de fuente modal del documento vía `get_text("dict")`; heading si supera el modal en >15 % o está en negrita y ocupa una sola línea. `nivel` por rangos de tamaño descendentes. Pila de secciones con **`secciones.empujar_seccion`**.
-9. **Ancla.** `{"pagina": n, "bbox": [x0, y0, x1, y1]}` — **lista, no tupla**, por la invariante JSON-nativo de la Parte A.
+1. **Texto y geometría.** `page.get_text("dict")` conserva bloques, líneas, spans y coordenadas.
+2. **Columnas.** Agrupa bloques por separación horizontal y emite la columna izquierda de arriba abajo y luego la derecha. Registra `meta_extra["paginas_dos_columnas"]`.
+3. **Cabeceras y pies.** Elimina líneas de los márgenes superior/inferior cuyo texto normalizado se repite en al menos tres páginas.
+4. **Índices.** Si más del 40 % de las líneas de una página coincide con `r"\.{4,}\s*\d+\s*$"`, descarta la página.
+5. **Tablas.** Usa `page.find_tables()` de PyMuPDF; cada fila se linealiza con **`tablas.linealizar_fila`** y se emite como `table_row`.
+6. **Captions.** Detecta prefijos `Figura|Figure|Gráfico|Tabla|Table|Cuadro` con número y captions sin prefijo cercanos a imágenes.
+7. **Encabezados.** Usa tamaño modal y negrita; asigna `nivel` por rangos de tamaño y actualiza la pila con **`secciones.empujar_seccion`**.
+8. **Anclas y metadata.** Emite `bbox` como lista JSON-nativa y registra páginas, autor, fecha, descartes, columnas y presencia de tablas.
 
 `titulo`: `doc.metadata["title"]` si no está vacía ni es un nombre de archivo → primer heading de nivel 1 → primera línea de la página 1.
 
-`meta_extra`: `num_paginas`, `escaneado`, `autor`, `fecha`, `paginas_descartadas`, `tiene_tablas`.
+`meta_extra`: `num_paginas`, `autor`, `fecha`, `paginas_descartadas`, `paginas_dos_columnas`, `tiene_tablas`.
 
-No hacer aquí: de-hyphenation (es de `cleaning/dehyphen.py`), normalización Unicode, colapso de espacios. OCR de imágenes embebidas: `# TODO`.
+No hacer aquí: de-hyphenation (es de `cleaning/dehyphen.py`), normalización Unicode, colapso de espacios ni OCR. Los PDF compuestos exclusivamente por imágenes no producen texto.
 
-Criterios de aceptación: un PDF a dos columnas produce orden de lectura humano; ningún bloque contiene el número de página suelto; las filas de tabla salen como `table_row`.
+Criterios verificados: PDF a dos columnas, filtros de índices y cabeceras/pies, captions, niveles de heading, filas `table_row` y anclas JSON-nativas.
 
 ### F.2 `parsers/image_parser.py`
 
@@ -1488,8 +1487,6 @@ tqdm>=4.66,<5
 
 # --- PDF ---
 pymupdf>=1.24,<2
-pdfplumber>=0.11,<0.12
-ocrmypdf>=16,<17          # opcional; import guardado, la rama OCR degrada sin el
 
 # --- OCR de imagenes ---
 pytesseract>=0.3.10,<0.4
@@ -1519,14 +1516,12 @@ Comprobación de que no se compila nada desde fuente:
 |---|---|---|
 | 0 | Baseline | `pytest -q` → **222 passed** |
 | 1 | Parte A (`to_dict`/`from_dict`) + tests | round-trip exacto |
-| 2 | `cleaning/normalize.py` + `dehyphen.py` + tests | el orden mojibake→NFKC verificado por test |
-| 3 | `cleaning/` restante + `pipeline.py` + tests | `limpiar_documento` idempotente |
-| 4 | `selector.py` + tests | `{d.fuente} == {p.name}`: **ningún archivo desaparece** |
-| 5 | `qa_report.py` + tests | cada assert duro con su caso |
-| 6 | `main.py` + test end-to-end | los 4 archivos de salida, round-trip desde disco |
-| 7 | `pdf_parser.py` | preferiblemente ya con corpus real |
-| 8 | `pbf_parser.py` | |
-| 9 | `image_parser.py` | requiere el binario de tesseract |
+| 2 | `cleaning/` + tests | normalización, dehyphenation, calidad, boilerplate, idioma, hash y deduplicación |
+| 3 | `selector.py` + tests | `{d.fuente} == {p.name}`: **ningún archivo desaparece** |
+| 4 | `qa_report.py` + tests | cada assert duro con su caso |
+| 5 | `main.py` + test end-to-end | los 4 archivos de salida, round-trip desde disco |
+| 6 | `pbf_parser.py` | siguiente parser de formato |
+| 7 | `image_parser.py` | requiere el binario de tesseract |
 
 Verificación end-to-end una vez esté el paso 6:
 
