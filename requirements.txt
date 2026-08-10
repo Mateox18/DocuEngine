@@ -29,7 +29,7 @@ pymupdf>=1.24,<2               # import: `import fitz`.
 # arrastrar numpy, y ademas resuelven el limite de 50.000 filas por streaming.
 
 # --- Componentes del entorno (Encoder / API / DB) ---
-# Aunque el parser base evita pandas/numpy, otros modulos (como encoder/octen.py)
+# Aunque el parser base evita pandas/numpy, otros modulos (como encoder/enc.py)
 # los requieren.
 numpy==2.4.3
 
