@@ -47,3 +47,4 @@ bitsandbytes==0.50.0
 # faiss-cpu: corre en cualquier maquina (Mac sin CUDA incluida). El indice
 # Flat que usa el reto no necesita GPU para el volumen esperado del corpus.
 faiss-cpu==1.15.0
+
