@@ -33,10 +33,13 @@ pymupdf>=1.24,<2               # import: `import fitz`.
 # los requieren.
 numpy==2.4.3
 
-# Wheel de PyTorch con CUDA 13.0, igual al entorno de desarrollo actual
-# (RTX 4070; el driver reporta compatibilidad con CUDA 13.3).
---extra-index-url https://download.pytorch.org/whl/cu130
-torch==2.13.0+cu130
+# torch: version generica aqui (instalable en cualquier plataforma, CPU/MPS).
+# Si vas a correr con GPU NVIDIA (CUDA), instala la variante CUDA de torch
+# ANTES de correr `pip install -r requirements.txt`, siguiendo las
+# instrucciones de pytorch.org/get-started/locally para tu version de CUDA
+# (revisa la version que soportan tus drivers con `nvidia-smi`). Si torch ya
+# esta instalado (incluida una variante +cuXXX), pip no lo va a tocar.
+torch==2.13.0
 sentence-transformers==5.7.0
 
 # Carga y ejecucion del modelo Octen INT8 usado en pruebas/aversifunciona.py.

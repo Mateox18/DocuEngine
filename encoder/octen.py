@@ -1,13 +1,14 @@
 import os
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
-
 import torch
+torch.set_num_threads(1)
 import numpy as np
 from sentence_transformers import SentenceTransformer
 from chunker.models import Chunk
 import faiss
 faiss.omp_set_num_threads(1)
 import json
+
 
 """
 if torch.backends.mps.is_available():
@@ -17,12 +18,13 @@ else:
 
 print("Usando: " + DEVICE)
 
-MODEL_NAME = "Octen/Octen-Embedding-8B-INT8"
+MODEL_NAME = "BAAI/bge-m3"
 
 model = SentenceTransformer(MODEL_NAME, device=DEVICE)
 
 print("Modelo cargado")
 """
+
 
 
 def validar_ids(chunks: list[Chunk]) -> None:
