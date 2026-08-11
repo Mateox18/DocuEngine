@@ -7,6 +7,12 @@
 ftfy>=6.2,<7
 langdetect>=1.0.9,<2
 
+# --- Chunking ---
+# pysbd: segmentacion en oraciones. Python puro y sin descargas de modelos,
+# igual que langdetect (NLTK punkt y spaCy exigen bajar datos en runtime).
+# No trae reglas de portugues; se usan las de espanol como sustituto.
+pysbd>=0.3.4,<0.4
+
 # --- HTML ---
 trafilatura>=2.0,<3
 readability-lxml>=0.8.1,<0.9   # import: `from readability import Document`.
