@@ -1,11 +1,13 @@
 import os
+import traceback
+from collections.abc import Iterator
 from pathlib import Path
 
 from dotenv import load_dotenv
 
 import parser.selector as selector
-from parser.models import ParsedDocument
-
+from parser.models import ErrorParseo, ParsedDocument
+from parser.cleaning import pipeline
 load_dotenv()
 
 docs_path = os.getenv("DOCS_PATH")
@@ -14,7 +16,10 @@ if docs_path is None:
     raise RuntimeError("Falta la variable DOCS_PATH en el archivo .env")
 
 raiz = Path(docs_path)
-def recorrer_archivos(raiz: Path):
+
+
+def recorrer_archivos(raiz: Path) -> Iterator[Path]:
+    """Recorre archivos en un orden estable y con memoria acotada."""
     for directorio, subdirectorios, archivos in os.walk(raiz):
         subdirectorios.sort()
         archivos.sort()
@@ -22,8 +27,11 @@ def recorrer_archivos(raiz: Path):
         for nombre in archivos:
             yield Path(directorio) / nombre
 
-def procesar_archivos(raiz: Path):
-    docs_por_fenomeno = {}
+def procesar_archivos(
+    raiz: Path,
+) -> Iterator[tuple[ParsedDocument | None, ErrorParseo | None]]:
+    """Parsea y limpia archivos uno a uno, aislando fallos por archivo."""
+    docs_por_fenomeno: dict[int, int] = {}
     for ruta in recorrer_archivos(raiz):
         parser = selector.detectar_parser(ruta)
 
@@ -42,13 +50,31 @@ def procesar_archivos(raiz: Path):
             doc_id,
             fenomeno,
         )
+        if error is None and documento is not None:
+            try:
+                documento = pipeline.limpiar_documento(documento)
+            except Exception as exc:
+                error = ErrorParseo(
+                    ruta=str(ruta),
+                    formato=documento.formato,
+                    excepcion=f"{type(exc).__name__}: {exc}",
+                    traceback=traceback.format_exc(),
+                )
+                documento = None
         yield documento, error
 
-def procesar_todo(raiz: Path):
+def procesar_todo(
+    raiz: Path,
+) -> tuple[list[ParsedDocument], list[ErrorParseo]]:
+    """Procesa todo el corpus y devuelve documentos válidos y errores."""
     documentos_procesados: list[ParsedDocument] = []
+    errores: list[ErrorParseo] = []
     for documento, error in procesar_archivos(raiz):
         if error is not None:
             print(error)
-        else:
+            errores.append(error)
+        elif documento is not None:
             documentos_procesados.append(documento)
-    return documentos_procesados
+    if len(documentos_procesados) == 0:
+        raise RuntimeError("No se encontraron documentos procesables")
+    return documentos_procesados, errores
