@@ -33,6 +33,15 @@ xlrd>=2.0,<3                   # solo para .xls legado; el import va guardado y
 # --- PDF ---
 pymupdf>=1.24,<2               # import: `import fitz`.
 
+# --- OCR de imagenes ---
+pytesseract>=0.3.10,<0.4
+Pillow>=10.4,<12
+opencv-python>=4.10,<5
+
+# --- Mapas ---
+osmium>=4.0,<5
+mapbox-vector-tile>=2.1,<3
+
 # Sin pandas a proposito: la especificacion prohibe inferir tipos y las filas se
 # recorren de una en una, asi que csv/openpyxl en modo iterador dan lo mismo sin
 # arrastrar numpy, y ademas resuelven el limite de 50.000 filas por streaming.

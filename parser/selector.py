@@ -5,6 +5,8 @@ from parser.parsers.html_parser import HtmlParser
 from parser.parsers.base import BaseParser
 from parser.parsers.json_parser import JsonParser
 from parser.parsers.pdf_parser import PdfParser
+from parser.parsers.pbf_parser import PbfParser
+from parser.parsers.image_parser import ImageParser
 from parser.parsers.tabular_parser import TabularParser
 from parser.parsers.text_parser import TextParser
 
@@ -16,6 +18,8 @@ PARSERS = [
     JsonParser,
     PdfParser,
     TabularParser,
+    ImageParser,
+    PbfParser,
 ]
 
 def detectar_parser(archivo: Path) -> BaseParser | None:
@@ -54,6 +58,5 @@ def inferir_fenomeno(ruta: Path, raiz: Path) -> int | None:
         logger.warning("No se pudo inferir el fenómeno de %s", ruta)
 
     return fenomeno
-
 
 
