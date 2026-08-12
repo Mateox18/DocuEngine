@@ -1,6 +1,10 @@
 """Tests unitarios para la clasificación estructural de líneas PDF."""
 
-from parser.models import BBox, TIPOS_BLOQUE
+from pathlib import Path
+
+import fitz
+
+from parser.models import BBox, Block, TIPOS_BLOQUE
 from parser.parsers.pdf_parser import PdfLine, PdfParser
 
 
@@ -132,3 +136,56 @@ def test_agrupar_lineas_solo_produce_tipos_de_bloque_validos() -> None:
     )
 
     assert all(tipo in TIPOS_BLOQUE for tipo, _ in grupos)
+
+
+def test_pdf_usa_ocr_como_fallback_en_pagina_sin_texto(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    ruta = tmp_path / "escaneado.pdf"
+    pdf = fitz.open()
+    pdf.new_page()
+    pdf.save(ruta)
+    pdf.close()
+
+    bloque = Block(
+        tipo="ocr_text",
+        texto="Texto recuperado desde una página escaneada.",
+        ancla={"bbox": [10, 20, 100, 40], "ocr": True, "pagina": 1},
+    )
+    monkeypatch.setattr(
+        PdfParser,
+        "_ocr_pagina",
+        lambda self, page, numero: ([bloque], 91.5, 6),
+    )
+
+    doc = PdfParser().parse(ruta, "DOC-1-00001", 1)
+
+    assert [b.texto for b in doc.blocks] == [
+        "Texto recuperado desde una página escaneada."
+    ]
+    assert doc.meta_extra["paginas_ocr"] == [1]
+    assert doc.meta_extra["confianza_ocr"] == {"1": 91.5}
+    assert doc.meta_extra["psm_ocr"] == {"1": 6}
+
+
+def test_pdf_no_invoca_ocr_si_la_pagina_tiene_texto(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    ruta = tmp_path / "texto.pdf"
+    pdf = fitz.open()
+    pagina = pdf.new_page()
+    pagina.insert_text((72, 72), "Texto seleccionable del documento.")
+    pdf.save(ruta)
+    pdf.close()
+
+    def ocr_no_deberia_llamarse(*args, **kwargs):
+        raise AssertionError("OCR no debía ejecutarse")
+
+    monkeypatch.setattr(PdfParser, "_ocr_pagina", ocr_no_deberia_llamarse)
+
+    doc = PdfParser().parse(ruta, "DOC-1-00001", 1)
+
+    assert doc.blocks
+    assert "paginas_ocr" not in doc.meta_extra

@@ -29,23 +29,8 @@ class ImageParser(BaseParser):
 
     def parse(self, path: Path, doc_id: str, fenomeno: int) -> ParsedDocument:
         doc = self._nuevo_documento(path, doc_id, fenomeno)
-        imagen = Image.open(path)
-        procesada = self._preprocesar(imagen)
-
-        resultados = [self._ocr(procesada, psm) for psm in self.PSMS]
-        resultado = max(resultados, key=lambda item: item[0])
-        confianza, psm, palabras = resultado
-
-        texto_util = " ".join(palabra["texto"] for palabra in palabras)
-        if confianza < self.CONFIANZA_MEDIA_MINIMA or len(texto_util) < self.CARACTERES_MINIMOS:
-            raise ParserError(
-                f"OCR insuficiente en {path.name}: "
-                f"confianza={confianza:.1f}, caracteres={len(texto_util)}"
-            )
-
-        doc.blocks = self._bloques(palabras)
-        if not doc.blocks:
-            raise ParserError(f"OCR sin bloques utilizables en {path.name}")
+        with Image.open(path) as imagen:
+            doc.blocks, confianza, psm = self.extraer_ocr(imagen)
 
         doc.meta_extra.update(
             {
@@ -55,6 +40,46 @@ class ImageParser(BaseParser):
             }
         )
         return doc
+
+    def extraer_ocr(
+        self,
+        imagen: Image.Image,
+        *,
+        pagina: int | None = None,
+        escala: float = 1.0,
+    ) -> tuple[list[Block], float, int]:
+        """Extrae OCR reutilizable por imagenes independientes y PDF."""
+        procesada = self._preprocesar(imagen)
+        resultados = [self._ocr(procesada, psm) for psm in self.PSMS]
+        confianza, psm, palabras = max(resultados, key=lambda item: item[0])
+        texto_util = " ".join(palabra["texto"] for palabra in palabras)
+        if (
+            confianza < self.CONFIANZA_MEDIA_MINIMA
+            or len(texto_util) < self.CARACTERES_MINIMOS
+        ):
+            contexto = f" en página {pagina}" if pagina is not None else ""
+            raise ParserError(
+                f"OCR insuficiente{contexto}: "
+                f"confianza={confianza:.1f}, caracteres={len(texto_util)}"
+            )
+
+        bloques = self._bloques(palabras)
+        if not bloques:
+            raise ParserError("OCR sin bloques utilizables")
+
+        for bloque in bloques:
+            bloque.ancla["ocr"] = True
+            if pagina is not None:
+                bloque.ancla["pagina"] = pagina
+            if escala != 1.0:
+                x0, y0, x1, y1 = bloque.ancla["bbox"]
+                bloque.ancla["bbox"] = [
+                    x0 / escala,
+                    y0 / escala,
+                    x1 / escala,
+                    y1 / escala,
+                ]
+        return bloques, confianza, psm
 
     @staticmethod
     def _preprocesar(imagen: Image.Image) -> np.ndarray:

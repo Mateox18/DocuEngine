@@ -16,9 +16,11 @@ import re
 import unicodedata
 
 import fitz
+from PIL import Image
 
-from parser.models import ParsedDocument, BBox, TipoBloque, TIPOS_BLOQUE
+from parser.models import Block, ParsedDocument, BBox, TipoBloque, TIPOS_BLOQUE
 from parser.parsers.base import BaseParser
+from parser.parsers.image_parser import ImageParser
 from parser.parsers.secciones import empujar_seccion
 from parser.parsers.tablas import linealizar_fila, nombrar_cabeceras
 
@@ -53,12 +55,15 @@ class PdfParser(BaseParser):
         Returns:
             ParsedDocument: Documento con bloques, titulo y metadata de PDF.
 
-        Los PDF que solo contienen imagenes no producen texto porque este
-        parser no ejecuta OCR.
+        Las paginas con menos de 30 caracteres de texto intentan OCR como
+        fallback; las paginas normales siguen usando la extraccion nativa.
         """
         with fitz.open(path) as pdf:
             doc = self._nuevo_documento(path, doc_id, fenomeno)
             pdf_blocks: list[PdfBlock] = []
+            ocr_por_pagina: dict[int, list[Block]] = {}
+            confianza_ocr: dict[str, float] = {}
+            psm_ocr: dict[str, int] = {}
             paginas: list[dict] = []
             tablas_por_pagina: dict[int, list[PdfTable]] = {}
             pesos_tamanio: Counter[float] = Counter()
@@ -84,6 +89,23 @@ class PdfParser(BaseParser):
                     )
                     if pdf_block is not None:
                         pdf_blocks.append(pdf_block)
+                if len(page.get_text("text").strip()) < 30:
+                    try:
+                        bloques_ocr, confianza, psm = self._ocr_pagina(
+                            page,
+                            numero_pagina,
+                        )
+                    except Exception as exc:  # OCR es un fallback no fatal
+                        self.logger.warning(
+                            "OCR omitido en %s página %d: %s",
+                            path,
+                            numero_pagina,
+                            exc,
+                        )
+                    else:
+                        ocr_por_pagina[numero_pagina] = bloques_ocr
+                        confianza_ocr[str(numero_pagina)] = confianza
+                        psm_ocr[str(numero_pagina)] = psm
 
             paginas_descartadas = self._paginas_de_indice(paginas)
             repetidos = self._cabeceras_pies_repetidos(pdf_blocks, paginas)
@@ -115,6 +137,7 @@ class PdfParser(BaseParser):
                     self._emitir_bloques(
                         doc, pdf_block, tamanio_normal, niveles, pila
                     )
+                doc.blocks.extend(ocr_por_pagina.get(pagina["numero"], []))
                 for tabla in tablas_por_pagina.get(pagina["numero"], []):
                     self._emitir_tabla(doc, tabla, pila)
 
@@ -126,6 +149,10 @@ class PdfParser(BaseParser):
                 "paginas_dos_columnas": paginas_dos_columnas,
                 "tiene_tablas": any(tablas_por_pagina.values()),
             })
+            if ocr_por_pagina:
+                doc.meta_extra["paginas_ocr"] = sorted(ocr_por_pagina)
+                doc.meta_extra["confianza_ocr"] = confianza_ocr
+                doc.meta_extra["psm_ocr"] = psm_ocr
             titulo = pdf.metadata.get("title") or ""
             if not titulo or titulo.casefold() == path.name.casefold():
                 headings = [b.texto for b in doc.blocks if b.tipo == "heading"]
@@ -135,6 +162,28 @@ class PdfParser(BaseParser):
             doc.titulo = titulo or None
 
             return doc
+
+    def _ocr_pagina(
+        self,
+        page: fitz.Page,
+        numero_pagina: int,
+    ) -> tuple[list[Block], float, int]:
+        """Renderiza una página y delega su OCR a ImageParser."""
+        escala = 2.0
+        pixmap = page.get_pixmap(
+            matrix=fitz.Matrix(escala, escala),
+            alpha=False,
+        )
+        imagen = Image.frombytes(
+            "RGB",
+            (pixmap.width, pixmap.height),
+            pixmap.samples,
+        )
+        return ImageParser().extraer_ocr(
+            imagen,
+            pagina=numero_pagina,
+            escala=escala,
+        )
 
     def _extraer_tablas(self, page: fitz.Page) -> list[PdfTable]:
         """Extrae tablas mediante la API nativa de PyMuPDF 1.23+."""
