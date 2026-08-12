@@ -1,10 +1,11 @@
 import re
 import pysbd
-from lxml.doctestcompare import strip
-
+from transformers import AutoTokenizer
 from parser.models import ParsedDocument
 from chunker.models import Chunk
 from parser.models import Block
+
+TOKENIZER = AutoTokenizer.from_pretrained("BAAI/bge-m3")
 
 SEGMENTADORES = {
     "es": pysbd.Segmenter(language="es", clean=False),
@@ -83,9 +84,13 @@ def fragmentar_documento(doc: ParsedDocument, lim: int, over: int, id_inicial: i
                     fenomeno = doc.fenomeno,
                     seccion_path = grup[0].seccion_path,
                     pagina = grup[0].ancla.get("pagina"),
-                    tipo_bloque_origen = grup[0].tipo
+                    tipo_bloque_origen = grup[0].tipo,
+                    formato = doc.formato,
+                    chunk_id = f"{doc.doc_id}-chunk-{indice:04d}",
+                    num_tokens = len(TOKENIZER.tokenize(unasola))
                 )
             )
+
 
 
             id_actual += 1
@@ -93,8 +98,18 @@ def fragmentar_documento(doc: ParsedDocument, lim: int, over: int, id_inicial: i
 
     return chunks
 
+def fragmentar_corpus(docs: list[ParsedDocument], lim: int, over: int) -> list[Chunk]:
 
+    chunks_total = []
+    ids = 0
 
+    for doc in docs:
+        chunks_parciales = fragmentar_documento(doc, lim, over, ids)
+        chunks_total.extend(chunks_parciales)
+        ids += len(chunks_parciales)
+        chunks_parciales = []
+
+    return chunks_total
 
 
 
