@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
 from typing import Any
@@ -113,3 +114,99 @@ def pagina_html() -> PaginaHtml:
 </html>"""
 
     return _pagina_html
+
+
+# ---------------------------------------------------------------------------
+# Fixtures de la capa de recuperacion
+#
+# La suite no puede depender de base_vectorial/ ni de los modelos reales: los
+# indices se construyen en otra etapa del pipeline y bajar bge-m3 son varios GB.
+# Lo que sigue fabrica un indice con el MISMO formato que produce
+# encoder/enc.py -un IndexIDMap(IndexFlatIP) mas un metadata.jsonl con el esquema
+# de Chunk.to_dict()- sin importar ni ejecutar ninguno de los dos modulos.
+#
+# faiss y numpy se importan DENTRO de las funciones: si no estan instalados, solo
+# fallan los tests de recuperacion en vez de romper la recoleccion entera.
+# ---------------------------------------------------------------------------
+
+DIM_FALSA = 1024   # la que CONFIG_ENCODERS declara para bge-m3
+
+
+def vector_unitario(semilla: int, dim: int = DIM_FALSA) -> Any:
+    """Vector de norma 1 reproducible. La semilla fija lo hace determinista."""
+    import numpy as np
+
+    generador = np.random.default_rng(semilla)
+    vector = generador.standard_normal(dim).astype("float32")
+    return vector / np.linalg.norm(vector)
+
+
+def chunk_falso(
+    *,
+    id_: int,
+    doc_id: str = "doc-a",
+    texto: str | None = None,
+    posicion: int = 0,
+) -> dict[str, Any]:
+    """Registro con el esquema exacto de Chunk.to_dict() (chunker/models.py:39-61)."""
+    contenido = texto if texto is not None else f"contenido del chunk numero {id_}"
+    return {
+        "id_": id_,
+        "doc_id": doc_id,
+        "texto": contenido,
+        "metadata": {
+            "fuente": f"{doc_id}.pdf",
+            "chunk_id": f"{doc_id}-chunk-{posicion:04d}",
+            "num_tokens": len(contenido.split()),
+            "formato": "pdf",
+            "fenomeno": 1,
+            "posicion": posicion,
+            "seccion_path": [],
+            "pagina": None,
+            "tipo": "paragraph",
+        },
+    }
+
+
+@pytest.fixture
+def crear_base_vectorial(tmp_path: Path) -> Callable[..., Path]:
+    """Escribe una base_vectorial/ sintetica y devuelve su ruta.
+
+        base = crear_base_vectorial([chunk_falso(id_=0), chunk_falso(id_=1)])
+
+    Por defecto cada chunk recibe un vector unitario derivado de su id_, asi que
+    dos llamadas con los mismos registros producen el mismo indice.
+    """
+
+    def _crear(
+        registros: Sequence[Mapping[str, Any]],
+        *,
+        vectores: Sequence[Any] | None = None,
+        nombre: str = "bge-m3",
+        dim: int = DIM_FALSA,
+    ) -> Path:
+        import faiss
+        import numpy as np
+
+        raiz = tmp_path / "base_vectorial"
+        directorio = raiz / f"encoder_{nombre}"
+        directorio.mkdir(parents=True, exist_ok=True)
+
+        if vectores is None:
+            vectores = [vector_unitario(r["id_"], dim) for r in registros]
+
+        indice = faiss.IndexIDMap(faiss.IndexFlatIP(dim))
+        indice.add_with_ids(
+            np.ascontiguousarray(vectores, dtype="float32"),
+            np.array([r["id_"] for r in registros], dtype="int64"),
+        )
+        faiss.write_index(indice, str(directorio / "index.faiss"))
+
+        ruta_metadata = directorio / "metadata.jsonl"
+        with open(ruta_metadata, "w", encoding="utf-8", newline="\n") as archivo:
+            for registro in registros:
+                archivo.write(json.dumps(registro, ensure_ascii=False) + "\n")
+
+        return raiz
+
+    return _crear
