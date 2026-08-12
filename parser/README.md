@@ -83,5 +83,16 @@ no forma parte de `procesar_todo()`.
 (documentos_procesados, errores)
 ```
 
-Todavía no serializa estos resultados a JSONL ni genera un informe QA; esas son
-las siguientes capas del pipeline.
+Los `ParsedDocument` no necesitan serializarse a JSON para continuar: se pasan
+directamente en memoria a la siguiente etapa, el `chunker`:
+
+```text
+documentos parseados y limpiados
+    ↓
+chunker
+    ↓
+chunks
+```
+
+Los errores sí deben persistirse, por ejemplo en `errores_parseo.jsonl`, para
+conservar los archivos omitidos o fallidos y poder revisarlos después.
