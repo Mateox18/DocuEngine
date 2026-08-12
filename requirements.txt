@@ -3,6 +3,9 @@
 # a trafilatura se le pasa siempre contenido en memoria, nunca `url=` ni
 # fetch_url(). Hay un test que lo verifica parcheando socket.socket.
 
+# --- Configuracion ---
+python-dotenv>=1.0,<2
+
 # --- Limpieza ---
 ftfy>=6.2,<7
 langdetect>=1.0.9,<2

@@ -28,3 +28,6 @@ Thumbs.db
 
 # Documentacion local
 /docs/
+
+# Variables de entorno locales
+.env
