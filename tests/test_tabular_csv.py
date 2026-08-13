@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import pytest
 
-from parser.models import ParsedDocument
-from parser.parsers import tabular_parser
-from parser.parsers.tabular_parser import TabularParser
+from lib.parser import ParsedDocument
+from lib.parser.parsers import tabular_parser
+from lib.parser.parsers.tabular_parser import TabularParser
 
 from conftest import Escribir
 

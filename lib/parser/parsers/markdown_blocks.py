@@ -20,10 +20,10 @@ import re
 from dataclasses import dataclass, field
 from typing import Any
 
-from parser.models import Block
-from parser.parsers.base import FabricaBloques, crear_bloque
-from parser.parsers.secciones import Pila, empujar_seccion, rutas
-from parser.parsers.tablas import linealizar_fila, nombrar_cabeceras
+from lib.parser.models import Block
+from lib.parser.parsers.base import FabricaBloques, crear_bloque
+from lib.parser.parsers.secciones import Pila, empujar_seccion, rutas
+from lib.parser.parsers.tablas import linealizar_fila, nombrar_cabeceras
 
 _RE_ATX = re.compile(r"^ {0,3}(#{1,6})(?:[ \t]+(.*?))?[ \t]*$")
 _RE_CIERRE_ATX = re.compile(r"\s+#+\s*$")

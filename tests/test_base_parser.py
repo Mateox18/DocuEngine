@@ -11,8 +11,8 @@ from pathlib import Path
 
 import pytest
 
-from parser.models import ErrorParseo, ParsedDocument
-from parser.parsers.base import BaseParser, ParserError
+from lib.parser import ErrorParseo, ParsedDocument
+from lib.parser.parsers import BaseParser, ParserError
 
 from conftest import Escribir
 

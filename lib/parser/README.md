@@ -1,6 +1,6 @@
 # Flujo de ingesta
 
-La carpeta `parser` transforma los archivos de `docs/` en objetos
+La carpeta `parser` transforma los archivos de `../../docs` en objetos
 `ParsedDocument`. El flujo actual es:
 
 ```text
@@ -21,7 +21,7 @@ cleaning.pipeline.limpiar_documento()
 
 ## Configuración
 
-`.env` debe definir la raíz del corpus:
+`../../.env` debe definir la raíz del corpus:
 
 ```env
 DOCS_PATH=C:\ruta\al\repositorio\docs
@@ -38,7 +38,7 @@ reproducible sin cargar todas las rutas en memoria.
 
 ## Fenómeno e identificador
 
-El fenómeno se infiere desde la primera carpeta relativa a `docs/`:
+El fenómeno se infiere desde la primera carpeta relativa a `../../docs`:
 
 | Carpeta | Fenómeno |
 |---|---:|

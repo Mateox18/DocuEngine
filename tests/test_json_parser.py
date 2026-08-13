@@ -6,9 +6,9 @@ import json
 
 import pytest
 
-from parser.models import ParsedDocument
-from parser.parsers.base import ParserError
-from parser.parsers.json_parser import JsonParser, inspeccionar_esquema
+from lib.parser import ParsedDocument
+from lib.parser.parsers import ParserError
+from lib.parser.parsers.json_parser import JsonParser, inspeccionar_esquema
 
 from conftest import Escribir
 

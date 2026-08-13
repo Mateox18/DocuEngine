@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from parser.models import ParsedDocument
-from parser.parsers.text_parser import TextParser
+from lib.parser import ParsedDocument
+from lib.parser.parsers.text_parser import TextParser
 
 from conftest import Escribir
 

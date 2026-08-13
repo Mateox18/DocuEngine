@@ -1,14 +1,14 @@
 import logging
 from pathlib import Path
 
-from parser.parsers.html_parser import HtmlParser
-from parser.parsers.base import BaseParser
-from parser.parsers.json_parser import JsonParser
-from parser.parsers.pdf_parser import PdfParser
-from parser.parsers.pbf_parser import PbfParser
-from parser.parsers.image_parser import ImageParser
-from parser.parsers.tabular_parser import TabularParser
-from parser.parsers.text_parser import TextParser
+from lib.parser.parsers.html_parser import HtmlParser
+from lib.parser.parsers.base import BaseParser
+from lib.parser.parsers.json_parser import JsonParser
+from lib.parser.parsers.pdf_parser import PdfParser
+from lib.parser.parsers.pbf_parser import PbfParser
+from lib.parser.parsers.image_parser import ImageParser
+from lib.parser.parsers.tabular_parser import TabularParser
+from lib.parser.parsers.text_parser import TextParser
 
 logger = logging.getLogger(__name__)
 

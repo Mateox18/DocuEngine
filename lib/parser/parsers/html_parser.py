@@ -15,12 +15,12 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Literal
 
-from parser.models import Block, ParsedDocument
-from parser.parsers.base import BaseParser, ParserError
-from parser.parsers.lectura import normalizar_saltos
-from parser.parsers.markdown_blocks import parsear_markdown
-from parser.parsers.secciones import Pila, empujar_seccion, rutas
-from parser.parsers.tablas import linealizar_fila, nombrar_cabeceras
+from lib.parser.models import Block, ParsedDocument
+from lib.parser.parsers.base import BaseParser, ParserError
+from lib.parser.parsers.lectura import normalizar_saltos
+from lib.parser.parsers.markdown_blocks import parsear_markdown
+from lib.parser.parsers.secciones import Pila, empujar_seccion, rutas
+from lib.parser.parsers.tablas import linealizar_fila, nombrar_cabeceras
 
 logger = logging.getLogger(__name__)
 

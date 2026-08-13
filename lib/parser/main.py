@@ -5,9 +5,10 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-import parser.selector as selector
-from parser.models import ErrorParseo, ParsedDocument
-from parser.cleaning import pipeline
+from lib import parser as selector
+from lib.parser.models import ErrorParseo, ParsedDocument
+from lib.parser.cleaning import pipeline
+
 load_dotenv()
 
 docs_path = os.getenv("DOCS_PATH")

@@ -3,8 +3,7 @@ os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"   # tolera las dos copias de OpenMP
 import torch
 torch.set_num_threads(1)                      # sin esto, encode() de un batch revienta el proceso
 import numpy as np
-from sentence_transformers import SentenceTransformer
-from chunker.models import Chunk
+from lib.chunker.models import Chunk
 import faiss
 faiss.omp_set_num_threads(1)                  # sin esto, search() revienta despues de usar torch
 import json

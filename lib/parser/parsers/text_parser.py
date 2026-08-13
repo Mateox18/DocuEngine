@@ -14,11 +14,11 @@ import logging
 import re
 from pathlib import Path
 
-from parser.models import Block, ParsedDocument
-from parser.parsers.base import BaseParser
-from parser.parsers.lectura import leer_texto, normalizar_saltos
-from parser.parsers.markdown_blocks import extraer_front_matter, parsear_markdown
-from parser.parsers.secciones import Pila, empujar_seccion, rutas
+from lib.parser.models import Block, ParsedDocument
+from lib.parser.parsers.base import BaseParser
+from lib.parser.parsers.lectura import leer_texto, normalizar_saltos
+from lib.parser.parsers.markdown_blocks import extraer_front_matter, parsear_markdown
+from lib.parser.parsers.secciones import Pila, empujar_seccion, rutas
 
 logger = logging.getLogger(__name__)
 

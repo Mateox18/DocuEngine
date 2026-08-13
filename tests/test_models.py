@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from parser.models import (
+from lib.parser import (
     FORMATOS_PLIEGO,
     SCHEMA_VERSION,
     Block,

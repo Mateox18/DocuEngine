@@ -18,11 +18,11 @@ import unicodedata
 import fitz
 from PIL import Image
 
-from parser.models import Block, ParsedDocument, BBox, TipoBloque, TIPOS_BLOQUE
-from parser.parsers.base import BaseParser
-from parser.parsers.image_parser import ImageParser
-from parser.parsers.secciones import empujar_seccion
-from parser.parsers.tablas import linealizar_fila, nombrar_cabeceras
+from lib.parser.models import Block, ParsedDocument, BBox, TipoBloque, TIPOS_BLOQUE
+from lib.parser.parsers.base import BaseParser
+from lib.parser.parsers.image_parser import ImageParser
+from lib.parser.parsers.secciones import empujar_seccion
+from lib.parser.parsers.tablas import linealizar_fila, nombrar_cabeceras
 
 _RE_CAPTION = re.compile(
     r"^(figura|figure|gráfico|grafico|tabla|table|cuadro)\s+\d+",

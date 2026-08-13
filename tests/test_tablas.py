@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from parser.parsers.tablas import linealizar_fila, nombrar_cabeceras
+from lib.parser.parsers.tablas import linealizar_fila, nombrar_cabeceras
 
 
 def test_cabecera_vacia_recibe_nombre_col() -> None:

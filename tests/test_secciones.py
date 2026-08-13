@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from parser.parsers.secciones import Pila, empujar_seccion, rutas
+from lib.parser.parsers import Pila, empujar_seccion, rutas
 
 
 def test_rutas_devuelve_solo_los_textos() -> None:

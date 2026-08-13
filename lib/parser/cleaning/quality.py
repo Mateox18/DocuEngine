@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from parser.models import Block
+from lib.parser.models import Block
 
 LARGO_MINIMO = 20
 RATIO_ALFA_MINIMO = 0.5

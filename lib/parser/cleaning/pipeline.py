@@ -2,18 +2,18 @@
 
 from __future__ import annotations
 
-from parser.cleaning.boilerplate import detectar_repetidos, eliminar_repetidos
-from parser.cleaning.dedup import calcular_hash, deduplicar_documentos
-from parser.cleaning.dehyphen import unir_palabras_cortadas
-from parser.cleaning.language import detectar_idioma, idioma_dominante
-from parser.cleaning.normalize import (
+from lib.parser.cleaning.boilerplate import detectar_repetidos, eliminar_repetidos
+from lib.parser.cleaning.dedup import calcular_hash, deduplicar_documentos
+from lib.parser.cleaning.dehyphen import unir_palabras_cortadas
+from lib.parser.cleaning.language import detectar_idioma, idioma_dominante
+from lib.parser.cleaning.normalize import (
     colapsar_espacios,
     normalizar_unicode,
     quitar_invisibles,
     reparar_mojibake,
 )
-from parser.cleaning.quality import evaluar_bloque
-from parser.models import ParsedDocument
+from lib.parser.cleaning.quality import evaluar_bloque
+from lib.parser.models import ParsedDocument
 
 
 def limpiar_documento(doc: ParsedDocument) -> ParsedDocument:

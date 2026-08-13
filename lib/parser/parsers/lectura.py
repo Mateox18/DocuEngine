@@ -13,7 +13,7 @@ import logging
 from dataclasses import dataclass
 from pathlib import Path
 
-from parser.parsers.base import ParserError
+from lib.parser.parsers.base import ParserError
 
 logger = logging.getLogger(__name__)
 

@@ -5,9 +5,9 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from parser.models import ParsedDocument
-from parser.parsers.base import BaseParser, ParserError
-from parser.parsers.tablas import linealizar_fila, nombrar_cabeceras
+from lib.parser.models import ParsedDocument
+from lib.parser.parsers.base import BaseParser, ParserError
+from lib.parser.parsers.tablas import linealizar_fila, nombrar_cabeceras
 
 
 class PbfParser(BaseParser):

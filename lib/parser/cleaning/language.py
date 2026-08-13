@@ -7,7 +7,7 @@ from collections import Counter
 
 from langdetect import DetectorFactory, LangDetectException, detect_langs
 
-from parser.models import ParsedDocument
+from lib.parser.models import ParsedDocument
 
 logger = logging.getLogger(__name__)
 DetectorFactory.seed = 0

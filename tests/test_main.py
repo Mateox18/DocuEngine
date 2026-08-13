@@ -2,8 +2,7 @@
 
 from pathlib import Path
 
-import parser.main as main
-
+from lib import parser as main
 
 F1 = "F1_IA_y_Capacidades_Estrategicas"
 F2 = "F2_Seguridad_Entorno_Espacial"
@@ -66,7 +65,7 @@ def test_fallo_de_limpieza_se_aisla_por_archivo(tmp_path: Path, monkeypatch) -> 
     def limpieza_rota(_documento):
         raise RuntimeError("limpieza rota")
 
-    monkeypatch.setattr(main.pipeline, "limpiar_documento", limpieza_rota)
+    monkeypatch.setattr(lib.parser.cleaning.pipeline, "limpiar_documento", limpieza_rota)
 
     resultados = list(main.procesar_archivos(raiz))
     documentos = [documento for documento, error in resultados if documento is not None]

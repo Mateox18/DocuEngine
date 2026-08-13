@@ -1,18 +1,18 @@
 """Pruebas de la capa comun de limpieza."""
 
-from parser.cleaning.boilerplate import detectar_repetidos, eliminar_repetidos
-from parser.cleaning.dedup import calcular_hash, deduplicar_documentos
-from parser.cleaning.dehyphen import unir_palabras_cortadas
-from parser.cleaning.language import detectar_idioma, idioma_dominante
-from parser.cleaning.normalize import (
+from lib.parser.cleaning.boilerplate import detectar_repetidos, eliminar_repetidos
+from lib.parser.cleaning import calcular_hash, deduplicar_documentos
+from lib.parser.cleaning import unir_palabras_cortadas
+from lib.parser.cleaning.language import detectar_idioma, idioma_dominante
+from lib.parser.cleaning.normalize import (
     colapsar_espacios,
     normalizar_unicode,
     quitar_invisibles,
     reparar_mojibake,
 )
-from parser.cleaning.pipeline import limpiar_documento
-from parser.cleaning.quality import evaluar_bloque
-from parser.models import Block, ParsedDocument
+from lib.parser.cleaning.pipeline import limpiar_documento
+from lib.parser.cleaning.quality import evaluar_bloque
+from lib.parser import Block, ParsedDocument
 
 
 def documento(*bloques: Block, doc_id: str = "d1") -> ParsedDocument:

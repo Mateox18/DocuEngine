@@ -4,7 +4,7 @@ from pathlib import Path
 
 from PIL import Image
 
-from parser.parsers.image_parser import ImageParser
+from lib.parser.parsers.image_parser import ImageParser
 
 
 def _datos_ocr(textos: list[str]) -> dict:

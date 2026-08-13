@@ -13,9 +13,9 @@ import socket
 
 import pytest
 
-from parser.models import ParsedDocument
-from parser.parsers.base import ParserError
-from parser.parsers.html_parser import Extraccion, HtmlParser
+from lib.parser import ParsedDocument
+from lib.parser.parsers import ParserError
+from lib.parser.parsers.html_parser import Extraccion, HtmlParser
 
 from conftest import RELLENO, Escribir, PaginaHtml
 

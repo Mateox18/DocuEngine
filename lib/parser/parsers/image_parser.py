@@ -12,8 +12,8 @@ from PIL import Image
 import pytesseract
 from pytesseract import Output
 
-from parser.models import Block, ParsedDocument
-from parser.parsers.base import BaseParser, ParserError
+from lib.parser.models import Block, ParsedDocument
+from lib.parser.parsers.base import BaseParser, ParserError
 
 
 class ImageParser(BaseParser):

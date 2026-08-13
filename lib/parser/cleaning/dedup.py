@@ -5,7 +5,7 @@ from __future__ import annotations
 import hashlib
 import logging
 
-from parser.models import ParsedDocument
+from lib.parser.models import ParsedDocument
 
 logger = logging.getLogger(__name__)
 

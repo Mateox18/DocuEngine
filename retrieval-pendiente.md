@@ -14,7 +14,7 @@ la metadata, que se genera así:
 doc_id = f"DOC-{fenomeno}-{docs_por_fenomeno[fenomeno]:05d}"   # parser/main.py:47
 ```
 
-Es decir, `DOC-2-00013`: un contador interno. Pero `parser/models.py:127-129` dice
+Es decir, `DOC-2-00013`: un contador interno. Pero `lib/parser/models.py:127-129` dice
 del otro campo:
 
 > `fuente` — nombre EXACTO del archivo original (path.name). **Clave de

@@ -23,10 +23,10 @@ from itertools import chain, islice
 from pathlib import Path
 from typing import Any
 
-from parser.models import Block, ParsedDocument
-from parser.parsers.base import BaseParser, ParserError
-from parser.parsers.lectura import leer_texto
-from parser.parsers.tablas import linealizar_fila, nombrar_cabeceras
+from lib.parser.models import Block, ParsedDocument
+from lib.parser.parsers.base import BaseParser, ParserError
+from lib.parser.parsers.lectura import leer_texto
+from lib.parser.parsers.tablas import linealizar_fila, nombrar_cabeceras
 
 logger = logging.getLogger(__name__)
 

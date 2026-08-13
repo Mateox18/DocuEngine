@@ -4,7 +4,7 @@ from pathlib import Path
 
 import mapbox_vector_tile
 
-from parser.parsers.pbf_parser import PbfParser
+from lib.parser.parsers import PbfParser
 
 
 def test_pbf_parser_extrae_atributos_mvt_y_filtra_renderizado(

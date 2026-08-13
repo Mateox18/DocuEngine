@@ -4,8 +4,8 @@ from pathlib import Path
 
 import fitz
 
-from parser.models import BBox, Block, TIPOS_BLOQUE
-from parser.parsers.pdf_parser import PdfLine, PdfParser
+from lib.parser import BBox, Block, TIPOS_BLOQUE
+from lib.parser.parsers.pdf_parser import PdfLine, PdfParser
 
 
 def linea(

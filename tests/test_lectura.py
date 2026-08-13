@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from parser.parsers.lectura import leer_texto, normalizar_saltos
+from lib.parser.parsers.lectura import leer_texto, normalizar_saltos
 
 from conftest import Escribir
 

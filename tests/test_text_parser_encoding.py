@@ -6,8 +6,8 @@ import logging
 
 import pytest
 
-from parser.parsers.base import ParserError
-from parser.parsers.text_parser import TextParser
+from lib.parser.parsers import ParserError
+from lib.parser.parsers.text_parser import TextParser
 
 from conftest import Escribir
 

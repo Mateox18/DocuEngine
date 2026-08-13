@@ -16,7 +16,7 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Any, ClassVar, Protocol
 
-from parser.models import Block, ErrorParseo, ParsedDocument, TipoBloque
+from lib.parser.models import Block, ErrorParseo, ParsedDocument, TipoBloque
 
 logger = logging.getLogger(__name__)
 

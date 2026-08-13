@@ -4,12 +4,12 @@ from __future__ import annotations
 
 from typing import Any
 
-from parser.models import Block, TipoBloque
-from parser.parsers.markdown_blocks import (
+from lib.parser import Block, TipoBloque
+from lib.parser.parsers.markdown_blocks import (
     extraer_front_matter,
     parsear_markdown,
 )
-from parser.parsers.secciones import Pila
+from lib.parser.parsers import Pila
 
 
 def _lineas(texto: str) -> list[str]:

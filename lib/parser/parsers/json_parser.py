@@ -25,9 +25,9 @@ from collections import deque
 from pathlib import Path
 from typing import Any
 
-from parser.models import Block, ParsedDocument
-from parser.parsers.base import BaseParser, ParserError
-from parser.parsers.lectura import leer_texto
+from lib.parser.models import Block, ParsedDocument
+from lib.parser.parsers.base import BaseParser, ParserError
+from lib.parser.parsers.lectura import leer_texto
 
 logger = logging.getLogger(__name__)
 

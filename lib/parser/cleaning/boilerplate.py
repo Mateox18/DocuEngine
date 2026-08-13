@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from collections import Counter
 
-from parser.models import ParsedDocument
+from lib.parser.models import ParsedDocument
 
 logger = logging.getLogger(__name__)
 LARGO_MAX_LINEA = 80
