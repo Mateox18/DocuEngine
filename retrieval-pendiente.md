@@ -33,3 +33,10 @@ del otro campo:
 | Confirmar `dim=1024` de bge-m3 | Está declarado en `CONFIG_ENCODERS` y solo se comprueba en runtime |
 | Un segundo índice (e5-large) | RRF con dos encoders solo está probado con listas a mano |
 | Consultas con respuesta conocida | Solo podemos medir determinismo, no calidad |
+
+## 4. Persistir los errores de ingesta
+
+Los archivos sin contenido util —por ejemplo, HTML compuesto casi solo por
+menu, cookies o navegacion— deben quedar fuera del indice y registrarse como
+`ErrorParseo`. `procesar_todo()` ya acumula esos errores, pero falta persistirlos
+en un archivo como `errores_parseo.jsonl` para poder auditarlos despues.
