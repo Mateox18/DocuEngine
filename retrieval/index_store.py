@@ -1,7 +1,7 @@
 """Carga de los indices FAISS y busqueda de vecinos mas cercanos.
 
 El punto delicado de este archivo es COMO se empareja un vector con su texto.
-`encoder/enc.py:96-109` inserta con `add_with_ids(chunk.id_)` sobre un
+`lib/encoder/enc.py:96-109` inserta con `add_with_ids(chunk.id_)` sobre un
 `IndexIDMap`, asi que `search()` devuelve el `id_` global del chunk y NO la fila
 del `.jsonl`. Coinciden solo mientras ningun chunk falle al vectorizar; los que
 fallan se descartan en `vectorizar()` (`enc.py:70-76`) y `guardar_metadata` no
@@ -41,7 +41,7 @@ TOLERANCIA_NORMA = 1e-3
 def _aplanar(registro: dict[str, Any]) -> dict[str, Any]:
     """Sube al nivel raiz las claves anidadas bajo `metadata`.
 
-    `Chunk.to_dict()` (`chunker/models.py:39-61`) anida fuente, chunk_id,
+    `Chunk.to_dict()` (`lib/chunker/models.py:39-61`) anida fuente, chunk_id,
     posicion, seccion_path y demas dentro de `metadata`. Aplanarlo una vez al
     cargar evita que cada modulo aguas abajo tenga que recordar la anidacion.
     Las claves de nivel raiz se escriben al final para que ganen ante cualquier
@@ -63,7 +63,7 @@ def _como_idmap(indice: faiss.Index) -> faiss.Index:
         raise IndiceInvalido(
             "El indice no es un IndexIDMap. La recuperacion empareja vectores "
             "con texto por el id_ del chunk, que solo existe si el indice se "
-            "construyo con add_with_ids, como hace encoder/enc.py:80-109."
+            "construyo con add_with_ids, como hace lib/encoder/enc.py:80-109."
         )
     return concreto
 
@@ -194,7 +194,7 @@ class IndexStore:
 
         No corrige nada ni bloquea la carga. El proyecto asume que el modelo
         normaliza por su cuenta (un modulo `Normalize` al final de su
-        `modules.json`), porque `encoder/enc.py:66` llama a `model.encode` con los
+        `modules.json`), porque `lib/encoder/enc.py:66` llama a `model.encode` con los
         parametros por defecto. Esto convierte esa suposicion en algo falsable:
         si el indice se construyo con un modelo que no normaliza, el
         `IndexFlatIP` mide producto interno y no coseno, los scores dejan de estar

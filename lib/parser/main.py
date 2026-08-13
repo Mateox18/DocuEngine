@@ -1,23 +1,11 @@
-import os
+import json
 import traceback
 from collections.abc import Iterator
 from pathlib import Path
 
-from dotenv import load_dotenv
-
-from lib import parser as selector
+from lib.parser import selector
 from lib.parser.models import ErrorParseo, ParsedDocument
 from lib.parser.cleaning import pipeline
-
-load_dotenv()
-
-docs_path = os.getenv("DOCS_PATH")
-
-if docs_path is None:
-    raise RuntimeError("Falta la variable DOCS_PATH en el archivo .env")
-
-raiz = Path(docs_path)
-
 
 def recorrer_archivos(raiz: Path) -> Iterator[Path]:
     """Recorre archivos en un orden estable y con memoria acotada."""
@@ -66,16 +54,39 @@ def procesar_archivos(
 
 def procesar_todo(
     raiz: Path,
+    errores_salida: Path | None = None,
 ) -> tuple[list[ParsedDocument], list[ErrorParseo]]:
-    """Procesa todo el corpus y devuelve documentos válidos y errores."""
+    """Procesa todo el corpus y devuelve documentos válidos y errores.
+
+    Si ``errores_salida`` se proporciona, persiste un error JSON por línea al
+    terminar el recorrido. El archivo se escribe aunque no haya errores.
+    """
     documentos_procesados: list[ParsedDocument] = []
     errores: list[ErrorParseo] = []
     for documento, error in procesar_archivos(raiz):
         if error is not None:
-            print(error)
+            print(f"[parseo] ERROR {error.ruta}: {error.excepcion}", flush=True)
             errores.append(error)
         elif documento is not None:
+            print(
+                f"[parseo] documento {documento.doc_id} procesado: {documento.fuente}",
+                flush=True,
+            )
             documentos_procesados.append(documento)
+    if errores_salida is not None:
+        persistir_errores(errores, errores_salida)
     if len(documentos_procesados) == 0:
         raise RuntimeError("No se encontraron documentos procesables")
+
     return documentos_procesados, errores
+
+
+def persistir_errores(errores: list[ErrorParseo], ruta: Path) -> None:
+    """Guarda los errores de ingesta como JSONL UTF-8, uno por línea."""
+    ruta.parent.mkdir(parents=True, exist_ok=True)
+    with ruta.open("w", encoding="utf-8", newline="\n") as archivo:
+        for error in errores:
+            archivo.write(
+                json.dumps(error.to_dict(), ensure_ascii=False, separators=(",", ":"))
+                + "\n"
+            )

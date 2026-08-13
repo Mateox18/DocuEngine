@@ -4,7 +4,7 @@ La regla que gobierna este archivo: la fuente de verdad del espacio vectorial es
 el flujo de INDEXACION, no este modulo. Una consulta codificada con otro modelo,
 otro pooling u otro prefijo cae en un espacio distinto, y FAISS devolvera
 vecinos sin quejarse de nada. Por eso `codificar_consulta` espeja la llamada de
-`encoder/enc.py:66` en vez de inventar la suya.
+`lib/encoder/enc.py:66` en vez de inventar la suya.
 
 No reformula, no expande y no reescribe la consulta: la restriccion 8.3 del
 pliego prohibe cualquier modelo generativo en la recuperacion.
@@ -97,7 +97,7 @@ def codificar_consulta(texto: str, encoder_nombre: str) -> np.ndarray:
     config = obtener_config(encoder_nombre)
     modelo = cargar_modelo(encoder_nombre)
 
-    # Misma llamada que encoder/enc.py:66, con una lista de un elemento: mismo
+    # Misma llamada que lib/encoder/enc.py:66, con una lista de un elemento: mismo
     # pooling, mismos parametros por defecto, mismo espacio de salida.
     vectores = modelo.encode([config.prefijo_consulta + texto])
 

@@ -2,7 +2,7 @@
 
 Este `__init__` no esta vacio a proposito. Fija los hilos de torch y de faiss
 antes de que ningun submodulo los use, replicando el preambulo de
-`encoder/enc.py:1-9`, cuyos comentarios documentan que sin esto el proceso
+`lib/encoder/enc.py:1-9`, cuyos comentarios documentan que sin esto el proceso
 muere: `encode()` de un batch revienta con varios hilos de torch, y `search()`
 revienta despues de haber usado torch si faiss no esta tambien fijado a uno.
 

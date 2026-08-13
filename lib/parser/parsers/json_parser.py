@@ -187,7 +187,7 @@ def inspeccionar_esquema(
     la configuracion de CAMPOS_TEXTO para esa fuente. Las fuentes heterogeneas
     son la causa numero uno de cuerpos vacios silenciosos.
 
-        python -m parser.parsers.json_parser ruta/al/archivo.json
+        python -m lib.parser.parsers.json_parser ruta/al/archivo.json
     """
     datos = json.loads(leer_texto(path).texto)
     registros, ruta, topologia = localizar_registros(datos)

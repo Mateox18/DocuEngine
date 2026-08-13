@@ -1,7 +1,7 @@
 import re
 import pysbd
 from transformers import AutoTokenizer
-from lib.parser import Block, ParsedDocument
+from lib.parser.models import Block, ParsedDocument
 from lib.chunker.models import Chunk
 
 TOKENIZER = AutoTokenizer.from_pretrained("BAAI/bge-m3")

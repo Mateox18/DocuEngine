@@ -11,7 +11,7 @@ La capa está implementada y con 48 tests en verde, pero todos corren contra un
 la metadata, que se genera así:
 
 ```python
-doc_id = f"DOC-{fenomeno}-{docs_por_fenomeno[fenomeno]:05d}"   # parser/main.py:47
+doc_id = f"DOC-{fenomeno}-{docs_por_fenomeno[fenomeno]:05d}"   # lib/parser/main.py:39
 ```
 
 Es decir, `DOC-2-00013`: un contador interno. Pero `lib/parser/models.py:127-129` dice

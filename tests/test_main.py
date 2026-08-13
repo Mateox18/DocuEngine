@@ -1,8 +1,9 @@
 """Pruebas de integración del flujo de ingesta."""
 
+import json
 from pathlib import Path
 
-from lib import parser as main
+import lib.parser as main
 
 F1 = "F1_IA_y_Capacidades_Estrategicas"
 F2 = "F2_Seguridad_Entorno_Espacial"
@@ -56,6 +57,37 @@ def test_procesar_todo_conserva_error_de_parseo_y_continua(tmp_path: Path) -> No
     assert "ParserError" in errores[0].excepcion
 
 
+def test_procesar_todo_persiste_errores_en_jsonl(tmp_path: Path) -> None:
+    raiz = tmp_path / "docs"
+    carpeta = raiz / F1
+    carpeta.mkdir(parents=True)
+    (carpeta / "malo.json").write_text("{no es json", encoding="utf-8")
+    (carpeta / "bueno.md").write_text("# Bueno\n\nContenido.", encoding="utf-8")
+    salida = tmp_path / "reportes" / "errores_parseo.jsonl"
+
+    documentos, errores = main.procesar_todo(raiz, errores_salida=salida)
+
+    assert len(documentos) == 1
+    assert len(errores) == 1
+    lineas = salida.read_text(encoding="utf-8").splitlines()
+    assert len(lineas) == 1
+    assert main.ErrorParseo.from_dict(json.loads(lineas[0])) == errores[0]
+
+
+def test_procesar_todo_persiste_archivo_vacio_si_no_hay_errores(tmp_path: Path) -> None:
+    raiz = tmp_path / "docs"
+    carpeta = raiz / F1
+    carpeta.mkdir(parents=True)
+    (carpeta / "bueno.md").write_text("# Bueno\n\nContenido.", encoding="utf-8")
+    salida = tmp_path / "errores_parseo.jsonl"
+
+    _documentos, errores = main.procesar_todo(raiz, errores_salida=salida)
+
+    assert errores == []
+    assert salida.exists()
+    assert salida.read_text(encoding="utf-8") == ""
+
+
 def test_fallo_de_limpieza_se_aisla_por_archivo(tmp_path: Path, monkeypatch) -> None:
     raiz = tmp_path / "docs"
     carpeta = raiz / F1
@@ -65,7 +97,9 @@ def test_fallo_de_limpieza_se_aisla_por_archivo(tmp_path: Path, monkeypatch) -> 
     def limpieza_rota(_documento):
         raise RuntimeError("limpieza rota")
 
-    monkeypatch.setattr(lib.parser.cleaning.pipeline, "limpiar_documento", limpieza_rota)
+    monkeypatch.setattr(
+        "lib.parser.cleaning.pipeline.limpiar_documento", limpieza_rota
+    )
 
     resultados = list(main.procesar_archivos(raiz))
     documentos = [documento for documento, error in resultados if documento is not None]

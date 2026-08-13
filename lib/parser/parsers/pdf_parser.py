@@ -5,7 +5,7 @@ Extrae texto con coordenadas y lo convierte en bloques semanticos
 pagina y `bbox`, ordena documentos de una o dos columnas y registra metadata
 estructural del PDF.
 
-La limpieza linguistica pertenece a `parser.cleaning` y no se realiza aqui.
+La limpieza linguistica pertenece a `lib.parser.cleaning` y no se realiza aqui.
 """
 from __future__ import annotations
 
@@ -575,6 +575,5 @@ class PdfBlock:
     bbox: BBox
     lineas: list[PdfLine]
     cerca_de_imagen: bool = False
-
 
 

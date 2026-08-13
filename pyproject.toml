@@ -10,7 +10,7 @@ requires-python = ">=3.11"
 [tool.pytest.ini_options]
 minversion = "8.0"
 # Ancla el rootdir en la raiz del repo y pone "." en sys.path, para que
-# `import parser` resuelva tambien con `pytest` a secas.
+# `import lib.parser` resuelva tambien con `pytest` a secas.
 pythonpath = ["."]
 testpaths = ["tests"]
 addopts = "-q --strict-markers"

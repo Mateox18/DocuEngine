@@ -95,6 +95,9 @@ def crear_faiss(dim: int):
 def indexar (idmap, buenos):
     """Inserta en el indice los pares (chunk, vector) de un batch."""
 
+    if not buenos:
+        return
+
     ids = []
     vectors = []
 
@@ -103,6 +106,8 @@ def indexar (idmap, buenos):
         vectors.append(vector)
 
     vectors_np = np.array(vectors, dtype=np.float32)
+    # IndexFlatIP equivale a similitud coseno solo con vectores unitarios.
+    faiss.normalize_L2(vectors_np)
     ids_np = np.array(ids, dtype=np.int64)
 
     idmap.add_with_ids(vectors_np, ids_np)
@@ -138,11 +143,22 @@ def armar_indice (chunks, model, dim, salto, ruta_indice, ruta_metadata):
     batches = generar_batches(chunks, salto)
 
     with open(ruta_metadata, "w", encoding="utf-8") as archivo:
-        for batch in batches:
+        total_batches = len(batches)
+        for numero_batch, batch in enumerate(batches, start=1):
+            print(
+                f"[encoder] batch {numero_batch}/{total_batches}: "
+                f"{len(batch)} chunks, generando embeddings...",
+                flush=True,
+            )
             buenos, malos = vectorizar(batch, model)
             indexar(idmap, buenos)
             guardar_metadata(archivo, buenos)
             malos_all.extend(malos)
+            print(
+                f"[encoder] batch {numero_batch}/{total_batches} terminado: "
+                f"{len(buenos)} OK, {len(malos)} fallidos",
+                flush=True,
+            )
 
     faiss.write_index(idmap, ruta_indice)
 
