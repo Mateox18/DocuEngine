@@ -2,7 +2,6 @@ import json
 import os
 import time
 import traceback
-from concurrent.futures import ThreadPoolExecutor
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -47,15 +46,9 @@ def _procesar_uno(
 
 def procesar_archivos(
     raiz: Path,
-    workers: int = 1,
 ) -> Iterator[tuple[ParsedDocument | None, ErrorParseo | None]]:
-    """Parsea archivos aislando fallos, opcionalmente con varios workers.
-
-    ``executor.map`` conserva el orden estable de entrada, por lo que los
-    doc_id y la reproducibilidad del corpus no cambian al activar workers.
-    """
+    """Parsea y limpia archivos uno a uno, aislando fallos por archivo."""
     docs_por_fenomeno: dict[int, int] = {}
-    trabajos: list[tuple[Path, str, int]] = []
     for ruta in recorrer_archivos(raiz):
         if selector.detectar_parser(ruta) is None:
             continue
@@ -67,30 +60,22 @@ def procesar_archivos(
                 docs_por_fenomeno.get(fenomeno, 0) + 1
         )
         doc_id = f"DOC-{fenomeno}-{docs_por_fenomeno[fenomeno]:05d}"
-        trabajos.append((ruta, doc_id, fenomeno))
-
-    workers = max(1, int(workers))
-    with ThreadPoolExecutor(max_workers=workers) as executor:
-        resultados = executor.map(lambda trabajo: _procesar_uno(*trabajo), trabajos)
-        for (ruta, _doc_id, _fenomeno), (documento, error, duracion) in zip(
-            trabajos, resultados
-        ):
-            if error is not None:
-                print(
-                    f"[parseo] ERROR en {ruta.name} tras {duracion:.1f}s: "
-                    f"{error.excepcion}", flush=True,
-                )
-            elif documento is not None:
-                print(
-                    f"[parseo] {documento.doc_id} procesado en {duracion:.1f}s: "
-                    f"{documento.fuente}", flush=True,
-                )
-            yield documento, error
+        documento, error, duracion = _procesar_uno(ruta, doc_id, fenomeno)
+        if error is not None:
+            print(
+                f"[parseo] ERROR en {ruta.name} tras {duracion:.1f}s: "
+                f"{error.excepcion}", flush=True,
+            )
+        elif documento is not None:
+            print(
+                f"[parseo] {documento.doc_id} procesado en {duracion:.1f}s: "
+                f"{documento.fuente}", flush=True,
+            )
+        yield documento, error
 
 def procesar_todo(
     raiz: Path,
     errores_salida: Path | None = None,
-    workers: int = 1,
 ) -> tuple[list[ParsedDocument], list[ErrorParseo]]:
     """Procesa todo el corpus y devuelve documentos válidos y errores.
 
@@ -99,7 +84,7 @@ def procesar_todo(
     """
     documentos_procesados: list[ParsedDocument] = []
     errores: list[ErrorParseo] = []
-    for documento, error in procesar_archivos(raiz, workers=workers):
+    for documento, error in procesar_archivos(raiz):
         if error is not None:
             errores.append(error)
         elif documento is not None:
