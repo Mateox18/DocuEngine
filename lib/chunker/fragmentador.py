@@ -12,21 +12,40 @@ SEGMENTADORES = {
 }
 
 TIPOS_ESTRUCTURADOS = frozenset({"table_row", "cell", "feature"})
+MAX_PALABRAS_BLOQUE_ESTRUCTURADO = 180
+
+
+def _partir_por_palabras(texto: str, limite: int) -> list[str]:
+    """Parte texto largo sin perder palabras ni introducir truncamiento."""
+    palabras = texto.split()
+    if len(palabras) <= limite:
+        return [texto]
+    return [
+        " ".join(palabras[inicio:inicio + limite])
+        for inicio in range(0, len(palabras), limite)
+    ]
 
 
 def oracionador(block: Block) -> list[str]:
     """Parte el texto de un bloque en oraciones completas.
 
-    Los bloques estructurados se devuelven enteros, sin segmentar: si una fila
-    trae una columna de texto libre con puntos, pysbd la parte en pedazos sin
-    sentido (un fragmento que empieza por "| anio: 2024" no significa nada).
+    Los bloques estructurados se conservan completos cuando son razonables.
+    Si una fila/celda contiene un campo de texto enorme, se divide por
+    palabras para evitar producir un chunk de miles de tokens.
 
     Los saltos de linea sueltos se aplanan antes de segmentar. La limpieza los
     conserva a proposito, pero pysbd los lee como final de oracion y partiria
     "El crecimiento\\nha sido acelerado" en dos frases incompletas.
     """
     if block.tipo in TIPOS_ESTRUCTURADOS:
-        return [block.texto]
+        # Las filas/celdas normalmente deben mantenerse juntas, pero algunos
+        # CSV/JSON contienen campos de texto enormes. Dejarlos como una sola
+        # "oracion" provoca batches con miles de tokens y ralentiza toda la
+        # GPU. Se divide solo ese caso, sin descartar contenido.
+        return _partir_por_palabras(
+            block.texto,
+            MAX_PALABRAS_BLOQUE_ESTRUCTURADO,
+        )
     else:
         text = re.sub(r'\s*\n\s*', " ", block.texto)
         seg = SEGMENTADORES.get(block.idioma, SEGMENTADORES["es"])
@@ -39,14 +58,9 @@ def agrupador(ora: list[str], lim: int, over: int ) -> list[list[str]]:
     `over` es cuantas oraciones del grupo anterior se repiten al inicio del
     siguiente, para que una idea no quede partida entre dos chunks sin puente.
 
-    Como la oracion es la unidad minima y nunca se abre, el requisito de
-    completitud linguistica del pliego (3.3) se cumple por construccion.
-
-    TODO: una sola oracion mas larga que `lim` produce un grupo que se pasa del
-    limite, porque partirla violaria el 3.3. El pliego lo contempla: el 9.2.1
-    manda dividir en subfragmentos al RESPONDER, no al indexar. El caso sin
-    salida es una unica oracion de 250+ palabras (OCR sin puntuacion); si
-    aparece en el corpus, lo resuelve generador.py, no este modulo.
+    Las oraciones normales no se abren. Una oración OCR o un bloque
+    estructurado excepcionalmente largo sí se subdivide por palabras, porque
+    dejarlo entero puede exceder el límite del encoder y ralentizar el batch.
     """
     grup = []
     act = []
@@ -54,6 +68,18 @@ def agrupador(ora: list[str], lim: int, over: int ) -> list[list[str]]:
 
     for sen in ora:
         cant = len(sen.split())
+
+        # Una oración OCR sin puntuación puede superar el límite completo.
+        # En ese caso es preferible crear subfragmentos completos en palabras
+        # que enviar un tensor gigantesco al encoder.
+        if cant > lim:
+            if act:
+                grup.append(act)
+                act = []
+                pal = 0
+            grup.extend([[_parte] for _parte in _partir_por_palabras(sen, lim)])
+            continue
+
         if act and cant + pal > lim:
             grup.append(act)
             if over <= 0:

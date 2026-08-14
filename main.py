@@ -58,11 +58,15 @@ def construir_base(
     palabras: int,
     solapamiento: int,
     batch_size: int,
+    workers: int,
 ) -> tuple[int, int]:
     """Ejecuta todas las etapas y devuelve (documentos, chunks)."""
     config = obtener_config(encoder_nombre)
     print(f"[main] iniciando parseo del corpus: {corpus}", flush=True)
-    documentos, _errores = procesar_todo(corpus, errores_salida=errores_parseo)
+    print(f"[main] workers de parseo: {workers}", flush=True)
+    documentos, _errores = procesar_todo(
+        corpus, errores_salida=errores_parseo, workers=workers
+    )
     print(f"[main] parseo terminado: {len(documentos)} documentos válidos", flush=True)
     print("[main] fragmentando documentos...", flush=True)
     chunks = fragmentar_corpus(documentos, palabras, solapamiento)
@@ -115,6 +119,7 @@ def construir_parser() -> argparse.ArgumentParser:
     parser.add_argument("--palabras", type=int, default=200)
     parser.add_argument("--solapamiento", type=int, default=2)
     parser.add_argument("--batch-size", type=int, default=32)
+    parser.add_argument("--workers", type=int, default=4)
     return parser
 
 
@@ -124,6 +129,7 @@ def main(argv: list[str] | None = None) -> int:
     construir_base(
         args.corpus, args.salida, args.errores_parseo, args.errores_indexacion,
         args.encoder, args.palabras, args.solapamiento, args.batch_size,
+        args.workers,
     )
     return 0
 

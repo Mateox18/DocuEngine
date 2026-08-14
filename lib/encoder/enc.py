@@ -36,9 +36,16 @@ def generar_batches(chunks: list[Chunk], salto) -> list[list[Chunk]]:
     porque vectorizar() necesita controlar cada grupo por separado para poder
     reintentarlo uno a uno cuando falla.
     """
+    # El orden de los chunks no afecta FAISS porque cada vector se inserta con
+    # su id explícito. Agrupar longitudes parecidas reduce el padding del
+    # tokenizer/modelo y evita que un chunk largo ralentice todo el batch.
+    ordenados = sorted(
+        chunks,
+        key=lambda chunk: (chunk.num_tokens, chunk.id_),
+    )
     batches = []
-    for num in range(0, len(chunks), salto):
-        batches.append(chunks[num:num+salto])
+    for num in range(0, len(ordenados), salto):
+        batches.append(ordenados[num:num+salto])
     return batches
 
 def vectorizar (batch: list[Chunk], model):
