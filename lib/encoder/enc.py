@@ -7,6 +7,7 @@ from lib.chunker.models import Chunk
 import faiss
 faiss.omp_set_num_threads(1)                  # sin esto, search() revienta despues de usar torch
 import json
+from pathlib import Path
 
 def validar_ids(chunks: list[Chunk]) -> None:
     """Falla si hay id_ repetidos en el lote.
@@ -131,7 +132,36 @@ def guardar_metadata (archivo, buenos):
             ensure_ascii=False) + "\n")
 
 
-def armar_indice (chunks, model, dim, salto, ruta_indice, ruta_metadata):
+def _guardar_checkpoint(
+    idmap, ruta_indice: Path, ruta_estado: Path, siguiente_batch: int,
+    metadata_lines: int, fallos: list[Chunk],
+) -> None:
+    """Persiste un punto de reanudación usando reemplazos atómicos."""
+    indice_temporal = ruta_indice.with_suffix(ruta_indice.suffix + ".tmp")
+    estado_temporal = ruta_estado.with_suffix(ruta_estado.suffix + ".tmp")
+    faiss.write_index(idmap, str(indice_temporal))
+    os.replace(indice_temporal, ruta_indice)
+    estado = {
+        "siguiente_batch": siguiente_batch,
+        "metadata_lines": metadata_lines,
+        "fallos_ids": [chunk.id_ for chunk in fallos],
+    }
+    estado_temporal.write_text(
+        json.dumps(estado, ensure_ascii=False), encoding="utf-8"
+    )
+    os.replace(estado_temporal, ruta_estado)
+
+
+def _truncar_lineas(ruta: Path, lineas: int) -> None:
+    """Descarta metadata escrita después del último checkpoint confirmado."""
+    contenido = ruta.read_text(encoding="utf-8").splitlines(keepends=True)
+    ruta.write_text("".join(contenido[:lineas]), encoding="utf-8", newline="\n")
+
+
+def armar_indice(
+    chunks, model, dim, salto, ruta_indice, ruta_metadata,
+    reanudar: bool = True, checkpoint_cada: int = 100,
+):
     """Construye el indice completo y lo persiste. Devuelve los chunks fallidos.
 
     La insercion en FAISS y la escritura de la metadata ocurren en la MISMA
@@ -142,16 +172,40 @@ def armar_indice (chunks, model, dim, salto, ruta_indice, ruta_metadata):
     """
 
     malos_all = []
+    ruta_indice = Path(ruta_indice)
+    ruta_metadata = Path(ruta_metadata)
+    ruta_indice.parent.mkdir(parents=True, exist_ok=True)
+    ruta_estado = ruta_indice.with_suffix(".checkpoint.json")
 
     validar_ids(chunks)
 
-    idmap = crear_faiss(dim)
-
     batches = generar_batches(chunks, salto)
+    inicio_batch = 0
+    metadata_lines = 0
 
-    with open(ruta_metadata, "w", encoding="utf-8") as archivo:
+    if reanudar and ruta_estado.exists() and ruta_indice.exists() and ruta_metadata.exists():
+        estado = json.loads(ruta_estado.read_text(encoding="utf-8"))
+        inicio_batch = int(estado["siguiente_batch"])
+        metadata_lines = int(estado["metadata_lines"])
+        if not 0 <= inicio_batch <= len(batches):
+            raise ValueError("Checkpoint fuera del rango de batches actual")
+        idmap = faiss.read_index(str(ruta_indice))
+        _truncar_lineas(ruta_metadata, metadata_lines)
+        fallos_previos = {int(id_) for id_ in estado.get("fallos_ids", [])}
+        malos_all = [chunk for chunk in chunks if chunk.id_ in fallos_previos]
+        print(
+            f"[encoder] reanudando en batch {inicio_batch + 1}/{len(batches)}; "
+            f"{idmap.ntotal} vectores ya persistidos", flush=True,
+        )
+    else:
+        idmap = crear_faiss(dim)
+
+    modo_metadata = "a" if inicio_batch else "w"
+    with open(ruta_metadata, modo_metadata, encoding="utf-8") as archivo:
         total_batches = len(batches)
-        for numero_batch, batch in enumerate(batches, start=1):
+        for numero_batch, batch in enumerate(
+            batches[inicio_batch:], start=inicio_batch + 1
+        ):
             print(
                 f"[encoder] batch {numero_batch}/{total_batches}: "
                 f"{len(batch)} chunks, generando embeddings...",
@@ -160,13 +214,27 @@ def armar_indice (chunks, model, dim, salto, ruta_indice, ruta_metadata):
             buenos, malos = vectorizar(batch, model)
             indexar(idmap, buenos)
             guardar_metadata(archivo, buenos)
+            archivo.flush()
+            metadata_lines += len(buenos)
             malos_all.extend(malos)
             print(
                 f"[encoder] batch {numero_batch}/{total_batches} terminado: "
                 f"{len(buenos)} OK, {len(malos)} fallidos",
                 flush=True,
             )
+            if checkpoint_cada > 0 and (
+                numero_batch % checkpoint_cada == 0 or numero_batch == total_batches
+            ):
+                _guardar_checkpoint(
+                    idmap, ruta_indice, ruta_estado, numero_batch,
+                    metadata_lines, malos_all,
+                )
 
-    faiss.write_index(idmap, ruta_indice)
+    # El último batch ya escribe checkpoint cuando checkpoint_cada > 0.
+    # Evitamos serializar de nuevo un índice potencialmente grande.
+    if checkpoint_cada <= 0 or not ruta_indice.exists():
+        faiss.write_index(idmap, str(ruta_indice))
+    if ruta_estado.exists():
+        ruta_estado.unlink()
 
     return malos_all
