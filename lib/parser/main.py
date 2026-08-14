@@ -1,4 +1,6 @@
 import json
+import os
+import time
 import traceback
 from collections.abc import Iterator
 from pathlib import Path
@@ -22,6 +24,7 @@ def procesar_archivos(
     """Parsea y limpia archivos uno a uno, aislando fallos por archivo."""
     docs_por_fenomeno: dict[int, int] = {}
     for ruta in recorrer_archivos(raiz):
+        inicio = time.perf_counter()
         parser = selector.detectar_parser(ruta)
 
         if parser is None:
@@ -50,6 +53,19 @@ def procesar_archivos(
                     traceback=traceback.format_exc(),
                 )
                 documento = None
+        duracion = time.perf_counter() - inicio
+        if error is not None:
+            print(
+                f"[parseo] ERROR en {ruta.name} tras {duracion:.1f}s: "
+                f"{error.excepcion}",
+                flush=True,
+            )
+        elif documento is not None:
+            print(
+                f"[parseo] {documento.doc_id} procesado en {duracion:.1f}s: "
+                f"{documento.fuente}",
+                flush=True,
+            )
         yield documento, error
 
 def procesar_todo(
@@ -65,13 +81,8 @@ def procesar_todo(
     errores: list[ErrorParseo] = []
     for documento, error in procesar_archivos(raiz):
         if error is not None:
-            print(f"[parseo] ERROR {error.ruta}: {error.excepcion}", flush=True)
             errores.append(error)
         elif documento is not None:
-            print(
-                f"[parseo] documento {documento.doc_id} procesado: {documento.fuente}",
-                flush=True,
-            )
             documentos_procesados.append(documento)
     if errores_salida is not None:
         persistir_errores(errores, errores_salida)

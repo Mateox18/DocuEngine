@@ -3,7 +3,7 @@
 import json
 from pathlib import Path
 
-import lib.parser as main
+from lib.parser import main
 
 F1 = "F1_IA_y_Capacidades_Estrategicas"
 F2 = "F2_Seguridad_Entorno_Espacial"

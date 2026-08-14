@@ -15,6 +15,7 @@ import json
 import logging
 from pathlib import Path
 
+import torch
 from retrieval.encoder import obtener_config
 from lib.chunker.fragmentador import fragmentar_corpus
 from lib.encoder import enc
@@ -71,10 +72,19 @@ def construir_base(
     logger.info("Documentos válidos: %d; chunks: %d", len(documentos), len(chunks))
     print(f"[main] chunking terminado: {len(chunks)} chunks", flush=True)
     logger.info("Cargando encoder %s (%s)", encoder_nombre, config.modelo)
+    dispositivo = "cuda" if torch.cuda.is_available() else "cpu"
+    if dispositivo == "cuda":
+        nombre_gpu = torch.cuda.get_device_name(0)
+        print(f"[main] usando GPU: {nombre_gpu}", flush=True)
+    else:
+        print("[main] CUDA no disponible; usando CPU", flush=True)
     print(f"[main] cargando encoder {encoder_nombre}: {config.modelo}", flush=True)
     modelo = EncoderDePasajes(
-        SentenceTransformer(config.modelo), config.prefijo_pasaje
+        SentenceTransformer(config.modelo, device=dispositivo), config.prefijo_pasaje
     )
+    if dispositivo == "cuda":
+        memoria = torch.cuda.memory_allocated() / 1024**3
+        print(f"[main] modelo cargado en CUDA; VRAM asignada: {memoria:.2f} GB", flush=True)
 
     carpeta = destino / f"encoder_{encoder_nombre}"
     carpeta.mkdir(parents=True, exist_ok=True)

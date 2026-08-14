@@ -89,7 +89,7 @@ class PdfParser(BaseParser):
                     )
                     if pdf_block is not None:
                         pdf_blocks.append(pdf_block)
-                if len(page.get_text("text").strip()) < 30:
+                if len(self._texto_de_dict(contenido).strip()) < 30:
                     try:
                         bloques_ocr, confianza, psm = self._ocr_pagina(
                             page,
@@ -119,6 +119,12 @@ class PdfParser(BaseParser):
                 if bloque_filtrado is not None
             ]
 
+            # Indexar una vez los bloques por pagina evita recorrer todos los
+            # bloques del PDF para cada pagina durante la emision final.
+            bloques_por_pagina: dict[int, list[PdfBlock]] = {}
+            for bloque in pdf_blocks:
+                bloques_por_pagina.setdefault(bloque.pagina, []).append(bloque)
+
             tamanio_normal = (
                 pesos_tamanio.most_common(1)[0][0]
                 if pesos_tamanio
@@ -129,7 +135,7 @@ class PdfParser(BaseParser):
             pila: list[tuple[int, str]] = []
             paginas_dos_columnas: list[int] = []
             for pagina in paginas:
-                bloques = [b for b in pdf_blocks if b.pagina == pagina["numero"]]
+                bloques = bloques_por_pagina.get(pagina["numero"], [])
                 bloques, dos_columnas = self._ordenar_bloques(bloques)
                 if dos_columnas:
                     paginas_dos_columnas.append(pagina["numero"])
@@ -163,13 +169,31 @@ class PdfParser(BaseParser):
 
             return doc
 
+    @staticmethod
+    def _texto_de_dict(contenido: dict) -> str:
+        """Reconstruye el texto visible sin repetir otra extracción de la página."""
+        lineas: list[str] = []
+        for bloque in contenido.get("blocks", []):
+            if bloque.get("type") != 0:
+                continue
+            for linea in bloque.get("lines", []):
+                texto = "".join(
+                    str(span.get("text", ""))
+                    for span in linea.get("spans", [])
+                )
+                if texto:
+                    lineas.append(texto)
+        return "\n".join(lineas)
+
     def _ocr_pagina(
         self,
         page: fitz.Page,
         numero_pagina: int,
     ) -> tuple[list[Block], float, int]:
         """Renderiza una página y delega su OCR a ImageParser."""
-        escala = 2.0
+        # 1.5 equivale aproximadamente a 108 DPI para una pagina PDF normal:
+        # conserva legibilidad para OCR y reduce memoria/tiempo frente a 2.0.
+        escala = 1.5
         pixmap = page.get_pixmap(
             matrix=fitz.Matrix(escala, escala),
             alpha=False,
@@ -183,6 +207,9 @@ class PdfParser(BaseParser):
             imagen,
             pagina=numero_pagina,
             escala=escala,
+            # En PDF las paginas OCR suelen ser bloques de texto completos;
+            # PSM 6 evita ejecutar una segunda pasada con PSM 3.
+            psms=(6,),
         )
 
     def _extraer_tablas(self, page: fitz.Page) -> list[PdfTable]:
@@ -575,5 +602,3 @@ class PdfBlock:
     bbox: BBox
     lineas: list[PdfLine]
     cerca_de_imagen: bool = False
-
-

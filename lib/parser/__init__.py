@@ -8,12 +8,14 @@ from lib.parser.models import (
     BBox,
     Block,
     ErrorParseo,
+    FORMATOS_PLIEGO,
     ParsedDocument,
+    SCHEMA_VERSION,
     TipoBloque,
     TIPOS_BLOQUE,
 )
 
 __all__ = [
-    "BBox", "Block", "ErrorParseo", "ParsedDocument", "TipoBloque",
+    "BBox", "Block", "ErrorParseo", "FORMATOS_PLIEGO", "ParsedDocument", "SCHEMA_VERSION", "TipoBloque",
     "TIPOS_BLOQUE",
 ]

@@ -5,8 +5,9 @@ Deliberadamente sin imports para no forzar la carga de dependencias pesadas
 """
 
 from lib.parser.parsers.base import BaseParser, ParserError
+from lib.parser.parsers.pbf_parser import PbfParser
 from lib.parser.parsers.secciones import Pila, empujar_seccion, rutas
 
 __all__ = [
-    "BaseParser", "ParserError", "Pila", "empujar_seccion", "rutas",
+    "BaseParser", "ParserError", "PbfParser", "Pila", "empujar_seccion", "rutas",
 ]

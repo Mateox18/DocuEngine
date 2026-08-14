@@ -28,7 +28,7 @@ def test_image_parser_extrae_bloques_y_metadata(tmp_path: Path, monkeypatch) -> 
     Image.new("RGB", (100, 100), "white").save(ruta, format="PNG")
 
     monkeypatch.setattr(
-        "parser.parsers.image_parser.pytesseract.image_to_data",
+        "lib.parser.parsers.image_parser.pytesseract.image_to_data",
         lambda *args, **kwargs: _datos_ocr(
             ["Informe", "de", "seguridad", "espacial", "regional"]
         ),
@@ -49,7 +49,7 @@ def test_image_parser_rechaza_ocr_insuficiente(tmp_path: Path, monkeypatch) -> N
     ruta = tmp_path / "logo.jpg"
     Image.new("RGB", (100, 100), "white").save(ruta)
     monkeypatch.setattr(
-        "parser.parsers.image_parser.pytesseract.image_to_data",
+        "lib.parser.parsers.image_parser.pytesseract.image_to_data",
         lambda *args, **kwargs: _datos_ocr(["logo"]),
     )
 

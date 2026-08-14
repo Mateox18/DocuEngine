@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 from collections import defaultdict
+import os
 from pathlib import Path
+import shutil
 from typing import Any
 
 import cv2
@@ -14,6 +16,23 @@ from pytesseract import Output
 
 from lib.parser.models import Block, ParsedDocument
 from lib.parser.parsers.base import BaseParser, ParserError
+
+
+def _configurar_tesseract() -> None:
+    """Encuentra Tesseract en PATH, variable de entorno o rutas Windows comunes."""
+    candidatos = [
+        os.getenv("TESSERACT_CMD"),
+        shutil.which("tesseract"),
+        r"C:\Program Files\Tesseract-OCR\tesseract.exe",
+        r"C:\Program Files (x86)\Tesseract-OCR\tesseract.exe",
+    ]
+    for candidato in candidatos:
+        if candidato and Path(candidato).is_file():
+            pytesseract.pytesseract.tesseract_cmd = str(candidato)
+            return
+
+
+_configurar_tesseract()
 
 
 class ImageParser(BaseParser):
@@ -47,10 +66,12 @@ class ImageParser(BaseParser):
         *,
         pagina: int | None = None,
         escala: float = 1.0,
+        psms: tuple[int, ...] | None = None,
     ) -> tuple[list[Block], float, int]:
         """Extrae OCR reutilizable por imagenes independientes y PDF."""
         procesada = self._preprocesar(imagen)
-        resultados = [self._ocr(procesada, psm) for psm in self.PSMS]
+        modos = self.PSMS if psms is None else psms
+        resultados = [self._ocr(procesada, psm) for psm in modos]
         confianza, psm, palabras = max(resultados, key=lambda item: item[0])
         texto_util = " ".join(palabra["texto"] for palabra in palabras)
         if (
