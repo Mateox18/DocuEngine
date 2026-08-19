@@ -29,5 +29,12 @@ Thumbs.db
 # Documentacion local
 /docs/
 
+# Artefactos locales del pipeline (pueden contener rutas, corpus o texto extraído)
+/base_vectorial/
+/errores_parseo.jsonl
+/errores_indexacion.jsonl
+/resultados.jsonl
+/data/*.jsonl
+
 # Variables de entorno locales
 .env
