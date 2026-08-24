@@ -8,7 +8,7 @@ import faiss
 faiss.omp_set_num_threads(1)                  # sin esto, search() revienta despues de usar torch
 import json
 from pathlib import Path
-
+#TODO implementar bi encoder y considerar implementacion de grafo de conocimiento
 def validar_ids(chunks: list[Chunk]) -> None:
     """Falla si hay id_ repetidos en el lote.
 
@@ -29,7 +29,7 @@ def validar_ids(chunks: list[Chunk]) -> None:
 
     if len(duplicados) > 0:
         raise ValueError(f"Se encontraron IDs duplicados: {duplicados}")
-
+#TODO optimizar generacion de batches, evitar batches con chunks de tamanio dispar
 def generar_batches(chunks: list[Chunk], salto) -> list[list[Chunk]]:
     """Parte la lista de chunks en grupos de `salto` elementos.
 

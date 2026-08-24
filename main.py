@@ -59,6 +59,7 @@ def construir_base(
     solapamiento: int,
     batch_size: int,
 ) -> tuple[int, int]:
+
     """Ejecuta todas las etapas y devuelve (documentos, chunks)."""
     config = obtener_config(encoder_nombre)
     print(f"[main] iniciando parseo del corpus: {corpus}", flush=True)

@@ -33,7 +33,7 @@ def detectar_parser(archivo: Path) -> BaseParser | None:
         archivo,
     )
     return None
-
+#TODO eliminar mecanismo de inferencia de fenomeno para generalizacion, podria reemplazarse por reconstruccion de ruta mediante las anclas
 def inferir_fenomeno(ruta: Path, raiz: Path) -> int | None:
     try:
         relativa = ruta.relative_to(raiz)

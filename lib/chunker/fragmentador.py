@@ -25,7 +25,7 @@ def _partir_por_palabras(texto: str, limite: int) -> list[str]:
         for inicio in range(0, len(palabras), limite)
     ]
 
-
+fenomeno
 def oracionador(block: Block) -> list[str]:
     """Parte el texto de un bloque en oraciones completas.
 
@@ -125,7 +125,8 @@ def agrupar_por_seccion(bloques: list[Block]) -> list[list[Block]]:
         grupos.append(act)
 
     return grupos
-
+#TODO priorizar fragmentacion por tokens para evitar chunks demasiado grandes debido a la jerarquia del documento
+#TODO al fragmentar por tokens mejorar overlap y referencias a la ancla para evitar perdida de semantica
 def fragmentar_documento(doc: ParsedDocument, lim: int, over: int, id_inicial: int = 0) -> list[Chunk]:
     """Convierte un documento parseado y limpio en su lista de Chunk.
 

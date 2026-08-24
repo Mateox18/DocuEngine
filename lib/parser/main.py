@@ -43,7 +43,7 @@ def _procesar_uno(
             documento = None
     return documento, error, time.perf_counter() - inicio
 
-
+#TODO preparar pipeline principal para procesamiento sin arquitectura de fenomeno
 def procesar_archivos(
     raiz: Path,
 ) -> Iterator[tuple[ParsedDocument | None, ErrorParseo | None]]:
