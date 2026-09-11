@@ -130,7 +130,9 @@ Cada ejecución crea un índice para un único encoder. No mezcles índices prod
 
 ### 3. Preparar las consultas
 
-El generador recibe JSONL: un objeto JSON por línea. El contrato actual exige exactamente 50 consultas, IDs con formato `q` seguido de tres dígitos y texto no vacío.
+El generador recibe JSONL: un objeto JSON por línea. Acepta lotes de cualquier
+tamaño; cada consulta debe tener un ID con formato `q` seguido de tres dígitos y
+texto no vacío.
 
 `consultas.jsonl`:
 
@@ -139,7 +141,7 @@ El generador recibe JSONL: un objeto JSON por línea. El contrato actual exige e
 {"query_id":"q002","text":"¿Qué riesgos se describen para la infraestructura?"}
 ```
 
-Completa el archivo hasta `q050`. Los IDs no se repiten y se ordenan antes de procesarse, sin depender del orden de las líneas de entrada.
+Añade tantas consultas como necesites. Los IDs no se repiten y se ordenan antes de procesarse, sin depender del orden de las líneas de entrada.
 
 ### 4. Generar resultados
 
@@ -157,7 +159,7 @@ Por defecto se recuperan 100 vecinos por encoder. Si el pool no alcanza para com
 
 | Opción | Valor por defecto | Descripción |
 | --- | ---: | --- |
-| `--consultas` | requerida | JSONL con 50 consultas. |
+| `--consultas` | requerida | JSONL con una o más consultas. |
 | `--base` | `./base_vectorial` | Directorio con `encoder_<nombre>/`. |
 | `--salida` | `./resultados.jsonl` | Archivo JSONL de resultados. |
 | `--k_busqueda` | `100` | Vecinos iniciales por encoder. |

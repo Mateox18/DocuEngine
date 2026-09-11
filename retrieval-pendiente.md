@@ -61,9 +61,9 @@ fuera de Git; los índices generados también son artefactos locales. El archivo
 
 ## Prioridad 1 — convertirlo en proyecto generalizable
 
-- [ ] Separar el núcleo reutilizable de la lógica específica del reto: nombres
-  de fenómenos, cardinalidad fija de 50 consultas, esquema de evaluación,
-  prefijos/modelos y reglas de `fuente` deben vivir en configuración o plugins.
+- [ ] Separar el núcleo reutilizable de la lógica específica del reto: esquema
+  de evaluación, prefijos/modelos y reglas de `fuente` deben vivir en
+  configuración o plugins.
 - [ ] Definir una configuración versionada (por ejemplo YAML/TOML) para corpus,
   parsers, limpieza, chunking, encoders, índice, consultas y salida; evitar
   defaults ligados a `./docs`, `./base_vectorial` o nombres del reto.
@@ -75,9 +75,8 @@ fuera de Git; los índices generados también son artefactos locales. El archivo
   mismo contrato.
 - [ ] Exponer una API REST sobre ese servicio: `GET /health`, `GET /indexes`,
   `POST /search` para una consulta y `POST /search/batch` para lotes. Cargar
-  índices y modelos una vez al iniciar; conservar la regla de 50 consultas solo
-  en el flujo de entrega que realmente la requiera. Dejar la indexación por HTTP
-  para una etapa posterior por su coste operativo.
+  índices y modelos una vez al iniciar; aceptar lotes de tamaño variable. Dejar
+  la indexación por HTTP para una etapa posterior por su coste operativo.
 - [ ] Convertir el proyecto en paquete instalable con `build-system`, metadatos,
   dependencias opcionales por feature (PDF/OCR, mapas, encoders) y entry points
   de CLI. Añadir lockfile o política clara de actualización de dependencias.

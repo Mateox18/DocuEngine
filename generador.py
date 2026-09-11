@@ -51,7 +51,6 @@ from retrieval.index_store import IndexStore
 
 logger = logging.getLogger("generador")
 
-NUM_CONSULTAS = 50
 SEMILLA = 0
 
 # Escalera de ampliacion de k cuando el pool no da para llenar la salida. Es una
@@ -96,12 +95,6 @@ def leer_consultas(ruta: Path) -> list[tuple[str, str]]:
             if query_id in consultas:
                 raise ValueError(f"{ruta}, linea {numero}: query_id repetido ({query_id})")
             consultas[query_id] = texto
-
-    if len(consultas) != NUM_CONSULTAS:
-        raise ValueError(
-            f"{ruta} trae {len(consultas)} consultas y el pliego exige exactamente "
-            f"{NUM_CONSULTAS}. El archivo de salida debe tener una linea por cada una."
-        )
 
     return sorted(consultas.items())
 
@@ -151,7 +144,7 @@ def construir_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--consultas", type=Path, required=True,
-        help="JSONL con las 50 consultas: {'query_id': 'q001', 'text': '...'}",
+        help="JSONL con consultas: {'query_id': 'q001', 'text': '...'}",
     )
     parser.add_argument(
         "--base", type=Path, default=Path("./base_vectorial"),
