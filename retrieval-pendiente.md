@@ -70,6 +70,14 @@ fuera de Git; los índices generados también son artefactos locales. El archivo
 - [ ] Normalizar una API pública y una CLI estable para: parsear, indexar,
   consultar, validar y auditar. Mantener funciones internas fuera de la API
   pública y documentar compatibilidad.
+- [ ] Extraer la lógica de búsqueda de `generador.py` en un servicio reutilizable
+  sin lectura ni escritura de archivos, para que la CLI y otros clientes usen el
+  mismo contrato.
+- [ ] Exponer una API REST sobre ese servicio: `GET /health`, `GET /indexes`,
+  `POST /search` para una consulta y `POST /search/batch` para lotes. Cargar
+  índices y modelos una vez al iniciar; conservar la regla de 50 consultas solo
+  en el flujo de entrega que realmente la requiera. Dejar la indexación por HTTP
+  para una etapa posterior por su coste operativo.
 - [ ] Convertir el proyecto en paquete instalable con `build-system`, metadatos,
   dependencias opcionales por feature (PDF/OCR, mapas, encoders) y entry points
   de CLI. Añadir lockfile o política clara de actualización de dependencias.
