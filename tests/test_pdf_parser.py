@@ -159,7 +159,7 @@ def test_pdf_usa_ocr_como_fallback_en_pagina_sin_texto(
         lambda self, page, numero: ([bloque], 91.5, 6),
     )
 
-    doc = PdfParser().parse(ruta, "DOC-1-00001", 1)
+    doc = PdfParser().parse(ruta, "DOC-00001")
 
     assert [b.texto for b in doc.blocks] == [
         "Texto recuperado desde una página escaneada."
@@ -185,7 +185,7 @@ def test_pdf_no_invoca_ocr_si_la_pagina_tiene_texto(
 
     monkeypatch.setattr(PdfParser, "_ocr_pagina", ocr_no_deberia_llamarse)
 
-    doc = PdfParser().parse(ruta, "DOC-1-00001", 1)
+    doc = PdfParser().parse(ruta, "DOC-00001")
 
     assert doc.blocks
     assert "paginas_ocr" not in doc.meta_extra

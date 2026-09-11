@@ -85,9 +85,9 @@ class HtmlParser(BaseParser):
 
     # ------------------------------------------------------------------ API
 
-    def parse(self, path: Path, doc_id: str, fenomeno: int) -> ParsedDocument:
+    def parse(self, path: Path, doc_id: str) -> ParsedDocument:
         """Parsea una pagina HTML aplicando la cascada de extractores."""
-        doc = self._nuevo_documento(path, doc_id, fenomeno)
+        doc = self._nuevo_documento(path, doc_id)
 
         # NO se usa lectura.leer_texto: el HTML declara su encoding en banda
         # (<meta charset>) y forzarle la cascada utf-8 -> latin-1 produce

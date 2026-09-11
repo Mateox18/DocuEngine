@@ -27,7 +27,7 @@ def test_recorrer_archivos_es_estable_y_no_incluye_directorios(tmp_path: Path) -
     assert all(ruta.is_file() for ruta in rutas)
 
 
-def test_procesar_todo_infiere_fenomeno_genera_ids_y_omite_extension_desconocida(
+def test_procesar_todo_genera_ids_globales_y_omite_extension_desconocida(
     tmp_path: Path,
 ) -> None:
     raiz = tmp_path / "docs"
@@ -36,10 +36,7 @@ def test_procesar_todo_infiere_fenomeno_genera_ids_y_omite_extension_desconocida
     documentos, errores = main.procesar_todo(raiz)
 
     assert errores == []
-    assert [(doc.doc_id, doc.fenomeno) for doc in documentos] == [
-        ("DOC-1-00001", 1),
-        ("DOC-2-00001", 2),
-    ]
+    assert [doc.doc_id for doc in documentos] == ["DOC-00001", "DOC-00002"]
 
 
 def test_procesar_todo_conserva_error_de_parseo_y_continua(tmp_path: Path) -> None:
@@ -51,7 +48,7 @@ def test_procesar_todo_conserva_error_de_parseo_y_continua(tmp_path: Path) -> No
 
     documentos, errores = main.procesar_todo(raiz)
 
-    assert [doc.doc_id for doc in documentos] == ["DOC-1-00002"]
+    assert [doc.doc_id for doc in documentos] == ["DOC-00002"]
     assert len(errores) == 1
     assert errores[0].ruta.endswith("a_malo.json")
     assert "ParserError" in errores[0].excepcion

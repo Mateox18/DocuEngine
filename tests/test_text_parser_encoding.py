@@ -15,7 +15,7 @@ from conftest import Escribir
 def test_utf8_sin_bom(escribir: Escribir) -> None:
     ruta = escribir("doc.md", "# Análisis de órbita\n\nCuerpo con acentuación.\n")
 
-    doc = TextParser().parse(ruta, "DOC-1-00001", 1)
+    doc = TextParser().parse(ruta, "DOC-00001")
 
     assert doc.meta_extra["encoding"] == "utf-8"
     assert doc.meta_extra["bom"] is False
@@ -27,7 +27,7 @@ def test_utf8_con_bom_no_deja_feff(escribir: Escribir) -> None:
     # como utf-8 dejando un ﻿ que impediria reconocer el heading.
     ruta = escribir("doc.md", "# Primero\n\nCuerpo.\n", encoding="utf-8-sig")
 
-    doc = TextParser().parse(ruta, "DOC-1-00001", 1)
+    doc = TextParser().parse(ruta, "DOC-00001")
 
     assert doc.meta_extra["encoding"] == "utf-8-sig"
     assert doc.meta_extra["bom"] is True
@@ -41,7 +41,7 @@ def test_bom_no_rompe_el_front_matter(escribir: Escribir) -> None:
         "doc.md", "---\ntitle: Con BOM\n---\n\nCuerpo.\n", encoding="utf-8-sig"
     )
 
-    doc = TextParser().parse(ruta, "DOC-1-00001", 1)
+    doc = TextParser().parse(ruta, "DOC-00001")
 
     assert doc.meta_extra["front_matter_datos"] == {"title": "Con BOM"}
     assert doc.titulo == "Con BOM"
@@ -50,7 +50,7 @@ def test_bom_no_rompe_el_front_matter(escribir: Escribir) -> None:
 def test_latin1_como_ultimo_recurso(escribir: Escribir) -> None:
     ruta = escribir("doc.md", "Informe de la región andina.\n", encoding="latin-1")
 
-    doc = TextParser().parse(ruta, "DOC-1-00001", 1)
+    doc = TextParser().parse(ruta, "DOC-00001")
 
     assert doc.meta_extra["encoding"] == "latin-1"
     assert doc.blocks
@@ -60,9 +60,9 @@ def test_latin1_como_ultimo_recurso(escribir: Escribir) -> None:
 def test_crlf_produce_el_mismo_resultado_que_lf(escribir: Escribir) -> None:
     contenido = "# Titulo\n\n- item\n\n| a | b |\n|---|---|\n| 1 | 2 |\n"
 
-    lf = TextParser().parse(escribir("lf.md", contenido), "DOC-1-00001", 1)
+    lf = TextParser().parse(escribir("lf.md", contenido), "DOC-00001")
     crlf = TextParser().parse(
-        escribir("crlf.md", contenido, salto="\r\n"), "DOC-1-00002", 1
+        escribir("crlf.md", contenido, salto="\r\n"), "DOC-00002"
     )
 
     assert [(b.tipo, b.texto, b.nivel, b.ancla) for b in lf.blocks] == [
@@ -74,7 +74,7 @@ def test_crlf_produce_el_mismo_resultado_que_lf(escribir: Escribir) -> None:
 def test_archivo_vacio(escribir: Escribir, contenido: str) -> None:
     ruta = escribir("doc.md", contenido)
 
-    doc = TextParser().parse(ruta, "DOC-1-00001", 1)
+    doc = TextParser().parse(ruta, "DOC-00001")
 
     assert doc.blocks == []
     assert doc.meta_extra["vacio"] is True
@@ -86,7 +86,7 @@ def test_extension_no_soportada_lanza_parsererror(escribir: Escribir) -> None:
     ruta = escribir("doc.pdf", "contenido")
 
     with pytest.raises(ParserError, match="no soporta la extension"):
-        TextParser().parse(ruta, "DOC-1-00001", 1)
+        TextParser().parse(ruta, "DOC-00001")
 
 
 def test_warning_de_documento_vacio_se_registra(
@@ -95,6 +95,6 @@ def test_warning_de_documento_vacio_se_registra(
     ruta = escribir("doc.md", "")
 
     with caplog.at_level(logging.WARNING):
-        TextParser().parse(ruta, "DOC-1-00001", 1)
+        TextParser().parse(ruta, "DOC-00001")
 
     assert any("documento vacio" in r.message for r in caplog.records)

@@ -40,7 +40,7 @@ class PdfParser(BaseParser):
 
     EXTENSIONES = (".pdf",)
     FORMATO = "pdf"
-    def parse(self, path: Path, doc_id: str, fenomeno: int) -> ParsedDocument:
+    def parse(self, path: Path, doc_id: str) -> ParsedDocument:
         """Parsea un PDF y devuelve su representacion intermedia.
 
         El flujo por pagina es: extraer bloques y tablas, descartar paginas de
@@ -50,7 +50,6 @@ class PdfParser(BaseParser):
         Args:
             path: Ruta al archivo .pdf
             doc_id: Identificador único del documento.
-            fenomeno: Fenómeno asociado al documento.
 
         Returns:
             ParsedDocument: Documento con bloques, titulo y metadata de PDF.
@@ -59,7 +58,7 @@ class PdfParser(BaseParser):
         fallback; las paginas normales siguen usando la extraccion nativa.
         """
         with fitz.open(path) as pdf:
-            doc = self._nuevo_documento(path, doc_id, fenomeno)
+            doc = self._nuevo_documento(path, doc_id)
             pdf_blocks: list[PdfBlock] = []
             ocr_por_pagina: dict[int, list[Block]] = {}
             confianza_ocr: dict[str, float] = {}

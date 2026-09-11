@@ -46,8 +46,8 @@ class ImageParser(BaseParser):
     CONFIANZA_MEDIA_MINIMA = 50.0
     CARACTERES_MINIMOS = 30
 
-    def parse(self, path: Path, doc_id: str, fenomeno: int) -> ParsedDocument:
-        doc = self._nuevo_documento(path, doc_id, fenomeno)
+    def parse(self, path: Path, doc_id: str) -> ParsedDocument:
+        doc = self._nuevo_documento(path, doc_id)
         with Image.open(path) as imagen:
             doc.blocks, confianza, psm = self.extraer_ocr(imagen)
 

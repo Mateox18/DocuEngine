@@ -114,9 +114,9 @@ class TabularParser(BaseParser):
 
     # ------------------------------------------------------------------ API
 
-    def parse(self, path: Path, doc_id: str, fenomeno: int) -> ParsedDocument:
+    def parse(self, path: Path, doc_id: str) -> ParsedDocument:
         """Parsea un archivo tabular emitiendo un bloque por fila de datos."""
-        doc = self._nuevo_documento(path, doc_id, fenomeno)
+        doc = self._nuevo_documento(path, doc_id)
 
         bloques: list[Block] = []
         preambulos: list[str] = []

@@ -12,7 +12,7 @@ from conftest import Escribir
 
 
 def _parsear(escribir: Escribir, contenido: str, nombre: str = "d.csv") -> ParsedDocument:
-    return TabularParser().parse(escribir(nombre, contenido), "DOC-1-00001", 1)
+    return TabularParser().parse(escribir(nombre, contenido), "DOC-00001")
 
 
 def _filas(doc: ParsedDocument) -> list[str]:
@@ -131,7 +131,7 @@ def test_encoding_latin1(escribir: Escribir) -> None:
     # a latin-1; con texto ASCII puro la cascada nunca llegaria ahi.
     ruta = escribir("d.csv", "pais,región\nColombia,andina\n", encoding="latin-1")
 
-    doc = TabularParser().parse(ruta, "DOC-1-00001", 1)
+    doc = TabularParser().parse(ruta, "DOC-00001")
 
     assert doc.meta_extra["encoding"] == "latin-1"
     assert _filas(doc)[0] == "pais: Colombia | región: andina"
@@ -140,7 +140,7 @@ def test_encoding_latin1(escribir: Escribir) -> None:
 def test_bom_utf8(escribir: Escribir) -> None:
     ruta = escribir("d.csv", "pais,anio\nColombia,2023\n", encoding="utf-8-sig")
 
-    doc = TabularParser().parse(ruta, "DOC-1-00001", 1)
+    doc = TabularParser().parse(ruta, "DOC-00001")
 
     assert doc.meta_extra["encoding"] == "utf-8-sig"
     assert doc.meta_extra["bom"] is True

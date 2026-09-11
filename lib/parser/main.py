@@ -21,7 +21,6 @@ def recorrer_archivos(raiz: Path) -> Iterator[Path]:
 def _procesar_uno(
     ruta: Path,
     doc_id: str,
-    fenomeno: int,
 ) -> tuple[ParsedDocument | None, ErrorParseo | None, float]:
     """Parsea y limpia un archivo; apto para ejecutarse en un worker."""
     inicio = time.perf_counter()
@@ -29,7 +28,7 @@ def _procesar_uno(
     if parser is None:
         return None, None, time.perf_counter() - inicio
 
-    documento, error = parser.parse_seguro(ruta, doc_id, fenomeno)
+    documento, error = parser.parse_seguro(ruta, doc_id)
     if error is None and documento is not None:
         try:
             documento = pipeline.limpiar_documento(documento)
@@ -43,24 +42,18 @@ def _procesar_uno(
             documento = None
     return documento, error, time.perf_counter() - inicio
 
-#TODO preparar pipeline principal para procesamiento sin arquitectura de fenomeno
 def procesar_archivos(
     raiz: Path,
 ) -> Iterator[tuple[ParsedDocument | None, ErrorParseo | None]]:
     """Parsea y limpia archivos uno a uno, aislando fallos por archivo."""
-    docs_por_fenomeno: dict[int, int] = {}
+    contador_documentos = 0
     for ruta in recorrer_archivos(raiz):
         if selector.detectar_parser(ruta) is None:
             continue
 
-        fenomeno = selector.inferir_fenomeno(ruta, raiz)
-        if fenomeno is None:
-            continue
-        docs_por_fenomeno[fenomeno] = (
-                docs_por_fenomeno.get(fenomeno, 0) + 1
-        )
-        doc_id = f"DOC-{fenomeno}-{docs_por_fenomeno[fenomeno]:05d}"
-        documento, error, duracion = _procesar_uno(ruta, doc_id, fenomeno)
+        contador_documentos += 1
+        doc_id = f"DOC-{contador_documentos:05d}"
+        documento, error, duracion = _procesar_uno(ruta, doc_id)
         if error is not None:
             print(
                 f"[parseo] ERROR en {ruta.name} tras {duracion:.1f}s: "

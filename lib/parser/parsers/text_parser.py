@@ -39,9 +39,9 @@ class TextParser(BaseParser):
 
     # ------------------------------------------------------------------ API
 
-    def parse(self, path: Path, doc_id: str, fenomeno: int) -> ParsedDocument:
+    def parse(self, path: Path, doc_id: str) -> ParsedDocument:
         """Parsea un .md/.markdown/.txt a la representacion intermedia."""
-        doc = self._nuevo_documento(path, doc_id, fenomeno)
+        doc = self._nuevo_documento(path, doc_id)
         leido = leer_texto(path, log=self.logger)
         doc.meta_extra["encoding"] = leido.encoding
         doc.meta_extra["bom"] = leido.bom

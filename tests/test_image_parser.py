@@ -34,7 +34,7 @@ def test_image_parser_extrae_bloques_y_metadata(tmp_path: Path, monkeypatch) -> 
         ),
     )
 
-    doc = ImageParser().parse(ruta, "DOC-1-00001", 1)
+    doc = ImageParser().parse(ruta, "DOC-00001")
 
     assert doc.formato == "imagen"
     assert doc.meta_extra["ocr"] is True
@@ -53,7 +53,7 @@ def test_image_parser_rechaza_ocr_insuficiente(tmp_path: Path, monkeypatch) -> N
         lambda *args, **kwargs: _datos_ocr(["logo"]),
     )
 
-    _, error = ImageParser().parse_seguro(ruta, "DOC-1-00001", 1)
+    _, error = ImageParser().parse_seguro(ruta, "DOC-00001")
 
     assert error is not None
     assert "OCR insuficiente" in error.excepcion

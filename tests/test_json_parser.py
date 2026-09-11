@@ -15,7 +15,7 @@ from conftest import Escribir
 
 def _parsear(escribir: Escribir, datos, nombre: str = "doc.json") -> ParsedDocument:
     contenido = datos if isinstance(datos, str) else json.dumps(datos)
-    return JsonParser().parse(escribir(nombre, contenido), "DOC-1-00001", 1)
+    return JsonParser().parse(escribir(nombre, contenido), "DOC-00001")
 
 
 def _textos(doc: ParsedDocument, tipo: str | None = None) -> list[str]:

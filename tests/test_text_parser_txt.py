@@ -11,7 +11,7 @@ from conftest import Escribir
 
 
 def _parsear(escribir: Escribir, contenido: str) -> ParsedDocument:
-    return TextParser().parse(escribir("doc.txt", contenido), "DOC-1-00001", 1)
+    return TextParser().parse(escribir("doc.txt", contenido), "DOC-00001")
 
 
 def test_parrafos_separados_por_linea_en_blanco(escribir: Escribir) -> None:

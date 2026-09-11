@@ -238,9 +238,9 @@ class JsonParser(BaseParser):
 
     # ------------------------------------------------------------------ API
 
-    def parse(self, path: Path, doc_id: str, fenomeno: int) -> ParsedDocument:
+    def parse(self, path: Path, doc_id: str) -> ParsedDocument:
         """Parsea un .json/.jsonl respetando las fronteras entre registros."""
-        doc = self._nuevo_documento(path, doc_id, fenomeno)
+        doc = self._nuevo_documento(path, doc_id)
         leido = leer_texto(path, log=self.logger)
         doc.meta_extra["encoding"] = leido.encoding
 

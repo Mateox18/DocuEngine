@@ -159,7 +159,6 @@ def chunk_falso(
             "chunk_id": f"{doc_id}-chunk-{posicion:04d}",
             "num_tokens": len(contenido.split()),
             "formato": "pdf",
-            "fenomeno": 1,
             "posicion": posicion,
             "seccion_path": [],
             "pagina": None,

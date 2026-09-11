@@ -41,7 +41,7 @@ def test_pbf_parser_extrae_atributos_mvt_y_filtra_renderizado(
         },
     )
 
-    doc = PbfParser().parse(ruta, "DOC-3-00001", 3)
+    doc = PbfParser().parse(ruta, "DOC-00001")
 
     assert doc.formato == "pbf"
     assert doc.meta_extra["tipo_pbf"] == "mvt"
@@ -58,7 +58,7 @@ def test_pbf_parser_rechaza_binario_no_reconocido(tmp_path: Path) -> None:
     ruta = tmp_path / "desconocido.pbf"
     ruta.write_bytes(b"no es un tile valido")
 
-    _, error = PbfParser().parse_seguro(ruta, "DOC-3-00001", 3)
+    _, error = PbfParser().parse_seguro(ruta, "DOC-00001")
 
     assert error is not None
     assert "no reconocido" in error.excepcion

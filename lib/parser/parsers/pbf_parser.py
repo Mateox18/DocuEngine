@@ -16,8 +16,8 @@ class PbfParser(BaseParser):
     EXTENSIONES = (".pbf",)
     FORMATO = "pbf"
 
-    def parse(self, path: Path, doc_id: str, fenomeno: int) -> ParsedDocument:
-        doc = self._nuevo_documento(path, doc_id, fenomeno)
+    def parse(self, path: Path, doc_id: str) -> ParsedDocument:
+        doc = self._nuevo_documento(path, doc_id)
         with path.open("rb") as archivo:
             cabecera = archivo.read(65536)
         es_osm = b"OSMHeader" in cabecera

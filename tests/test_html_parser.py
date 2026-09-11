@@ -23,7 +23,7 @@ CENTINELA = "El satelite Nandu-2 completo su decimoquinta orbita de control"
 
 
 def _parsear(escribir: Escribir, html: str, nombre: str = "p.html") -> ParsedDocument:
-    return HtmlParser().parse(escribir(nombre, html), "DOC-2-00001", 2)
+    return HtmlParser().parse(escribir(nombre, html), "DOC-00001")
 
 
 def _forzar_bs4(monkeypatch: pytest.MonkeyPatch) -> None:

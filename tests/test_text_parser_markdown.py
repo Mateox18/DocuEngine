@@ -9,7 +9,7 @@ from conftest import Escribir
 
 
 def _parsear(escribir: Escribir, contenido: str, nombre: str = "doc.md") -> ParsedDocument:
-    return TextParser().parse(escribir(nombre, contenido), "DOC-1-00001", 1)
+    return TextParser().parse(escribir(nombre, contenido), "DOC-00001")
 
 
 def _de_tipo(doc: ParsedDocument, tipo: str) -> list:

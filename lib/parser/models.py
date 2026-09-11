@@ -23,12 +23,12 @@ TipoBloque = Literal[
 ]
 TIPOS_BLOQUE: frozenset[str] = frozenset(get_args(TipoBloque))
 # Esta version debe actualizarse cada vez que se actualice el esquema de parseo.
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 # El pliego (Tabla 1) restringe el formato a pdf|html|md, pero el corpus real
 # incluye json, csv, xlsx, pbf e imagenes. Decision provisional: `formato`
 # guarda el formato REAL y formato_pliego() mapea al conjunto permitido cuando
 # haya que emitir la metadata final.
-# TODO(pliego): confirmar el mapeo con la organizacion del reto.
+
 FORMATOS_PLIEGO: frozenset[str] = frozenset({"pdf", "html", "md"})
 _MAPA_PLIEGO: dict[str, str] = {
     "pdf": "pdf",
@@ -129,7 +129,6 @@ class ParsedDocument:
     fuente: str
     # Formato real: pdf|html|md|txt|json|csv|xlsx|imagen|pbf
     formato: str
-    fenomeno: int
     ruta_original: str
 
     titulo: str | None = None
@@ -164,7 +163,6 @@ class ParsedDocument:
             "doc_id": self.doc_id,
             "fuente": self.fuente,
             "formato": self.formato,
-            "fenomeno": self.fenomeno,
             "ruta_original": self.ruta_original,
             "titulo": self.titulo,
             "idioma": self.idioma,
@@ -228,4 +226,3 @@ class ErrorParseo:
     def from_dict(cls, datos: dict[str, str]) -> ErrorParseo:
         """Reconstruye un fallo de parseo producido por to_dict()."""
         return cls(**datos)
-

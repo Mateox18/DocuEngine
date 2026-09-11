@@ -25,7 +25,6 @@ def _partir_por_palabras(texto: str, limite: int) -> list[str]:
         for inicio in range(0, len(palabras), limite)
     ]
 
-fenomeno
 def oracionador(block: Block) -> list[str]:
     """Parte el texto de un bloque en oraciones completas.
 
@@ -154,7 +153,6 @@ def fragmentar_documento(doc: ParsedDocument, lim: int, over: int, id_inicial: i
                     indice = indice,
                     texto = unasola,
                     fuente = doc.fuente,
-                    fenomeno = doc.fenomeno,
                     seccion_path = grup[0].seccion_path,
                     pagina = grup[0].ancla.get("pagina"),
                     tipo_bloque_origen = grup[0].tipo,

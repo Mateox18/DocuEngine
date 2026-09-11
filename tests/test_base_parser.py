@@ -24,14 +24,14 @@ class ParserDummy(BaseParser):
     FORMATO = "md"
     MAPA_FORMATOS = {".txt": "txt"}
 
-    def parse(self, path: Path, doc_id: str, fenomeno: int) -> ParsedDocument:
-        return self._nuevo_documento(path, doc_id, fenomeno)
+    def parse(self, path: Path, doc_id: str) -> ParsedDocument:
+        return self._nuevo_documento(path, doc_id)
 
 
 class ParserRoto(ParserDummy):
     """Parser que siempre revienta, para probar el aislamiento de errores."""
 
-    def parse(self, path: Path, doc_id: str, fenomeno: int) -> ParsedDocument:
+    def parse(self, path: Path, doc_id: str) -> ParsedDocument:
         raise RuntimeError("xref corrupto")
 
 
@@ -67,7 +67,7 @@ def test_base_parser_no_es_instanciable() -> None:
 def test_fuente_preserva_el_nombre_exacto(escribir: Escribir, nombre: str) -> None:
     ruta = escribir(nombre, "contenido")
 
-    doc = ParserDummy().parse(ruta, "DOC-1-00001", 1)
+    doc = ParserDummy().parse(ruta, "DOC-00001")
 
     assert doc.fuente == nombre
     assert doc.fuente == ruta.name
@@ -76,7 +76,7 @@ def test_fuente_preserva_el_nombre_exacto(escribir: Escribir, nombre: str) -> No
 def test_fuente_conserva_las_mayusculas(escribir: Escribir) -> None:
     ruta = escribir("Informe FINAL.MD", "contenido")
 
-    doc = ParserDummy().parse(ruta, "DOC-1-00001", 1)
+    doc = ParserDummy().parse(ruta, "DOC-00001")
 
     assert doc.fuente != doc.fuente.lower()
     assert doc.fuente == "Informe FINAL.MD"
@@ -88,7 +88,7 @@ def test_fuente_no_se_normaliza_unicode(escribir: Escribir) -> None:
     assert nombre_nfd != unicodedata.normalize("NFC", nombre_nfd)
     ruta = escribir(nombre_nfd, "contenido")
 
-    doc = ParserDummy().parse(ruta, "DOC-1-00001", 1)
+    doc = ParserDummy().parse(ruta, "DOC-00001")
 
     assert doc.fuente == ruta.name
 
@@ -96,7 +96,7 @@ def test_fuente_no_se_normaliza_unicode(escribir: Escribir) -> None:
 def test_ruta_original_es_absoluta(escribir: Escribir) -> None:
     ruta = escribir("informe.md", "contenido")
 
-    doc = ParserDummy().parse(ruta, "DOC-1-00001", 1)
+    doc = ParserDummy().parse(ruta, "DOC-00001")
 
     assert Path(doc.ruta_original).is_absolute()
     assert Path(doc.ruta_original).name == doc.fuente
@@ -105,10 +105,9 @@ def test_ruta_original_es_absoluta(escribir: Escribir) -> None:
 def test_nuevo_documento_campos_base(escribir: Escribir) -> None:
     ruta = escribir("informe.md", "contenido")
 
-    doc = ParserDummy().parse(ruta, "DOC-3-00042", 3)
+    doc = ParserDummy().parse(ruta, "DOC-00042")
 
-    assert doc.doc_id == "DOC-3-00042"
-    assert doc.fenomeno == 3
+    assert doc.doc_id == "DOC-00042"
     assert doc.formato == "md"
     assert doc.blocks == []
     assert doc.titulo is None
@@ -147,25 +146,25 @@ def test_bloque_copia_ancla() -> None:
 
 def test_nuevo_documento_archivo_inexistente(tmp_path: Path) -> None:
     with pytest.raises(ParserError, match="no existe"):
-        ParserDummy().parse(tmp_path / "fantasma.md", "DOC-1-00001", 1)
+        ParserDummy().parse(tmp_path / "fantasma.md", "DOC-00001")
 
 
 def test_nuevo_documento_directorio(tmp_path: Path) -> None:
     with pytest.raises(ParserError, match="no existe o no es un archivo"):
-        ParserDummy().parse(tmp_path, "DOC-1-00001", 1)
+        ParserDummy().parse(tmp_path, "DOC-00001")
 
 
 def test_nuevo_documento_extension_no_soportada(escribir: Escribir) -> None:
     ruta = escribir("informe.pdf", "contenido")
 
     with pytest.raises(ParserError, match="no soporta la extension"):
-        ParserDummy().parse(ruta, "DOC-1-00001", 1)
+        ParserDummy().parse(ruta, "DOC-00001")
 
 
 def test_parse_seguro_aisla_la_excepcion(escribir: Escribir) -> None:
     ruta = escribir("informe.md", "contenido")
 
-    doc, error = ParserRoto().parse_seguro(ruta, "DOC-1-00001", 1)
+    doc, error = ParserRoto().parse_seguro(ruta, "DOC-00001")
 
     assert doc is None
     assert isinstance(error, ErrorParseo)
@@ -178,7 +177,7 @@ def test_parse_seguro_aisla_la_excepcion(escribir: Escribir) -> None:
 def test_parse_seguro_camino_feliz(escribir: Escribir) -> None:
     ruta = escribir("informe.md", "contenido")
 
-    doc, error = ParserDummy().parse_seguro(ruta, "DOC-1-00001", 1)
+    doc, error = ParserDummy().parse_seguro(ruta, "DOC-00001")
 
     assert error is None
     assert doc is not None

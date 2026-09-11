@@ -20,7 +20,6 @@ def documento(*bloques: Block, doc_id: str = "d1") -> ParsedDocument:
         doc_id=doc_id,
         fuente=f"{doc_id}.txt",
         formato="txt",
-        fenomeno=1,
         ruta_original=f"/{doc_id}.txt",
         blocks=list(bloques),
     )

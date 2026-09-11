@@ -24,7 +24,6 @@ class Chunk:
     
     # 3. Metadatos de Evaluación (Críticos para el reto)
     fuente: str             # Nombre exacto del archivo original
-    fenomeno: int           # Categoría del documento
     formato: str
     
     # 4. Contexto Estructural
@@ -50,7 +49,6 @@ class Chunk:
                 "chunk_id": self.chunk_id,
                 "num_tokens": self.num_tokens,
                 "formato": self.formato,
-                "fenomeno": self.fenomeno,
                 "posicion": self.indice,
                 "seccion_path": list(self.seccion_path),
                 "pagina": self.pagina,
@@ -64,7 +62,7 @@ class Chunk:
         """Reconstruye un Chunk desde un diccionario."""
         meta = datos.get("metadata", {})
         # Identificar qué campos de meta son extra
-        fijos = {"fuente", "fenomeno", "posicion", "seccion_path", "pagina", "tipo", "chunk_id", "num_tokens", "formato"}
+        fijos = {"fuente", "posicion", "seccion_path", "pagina", "tipo", "chunk_id", "num_tokens", "formato"}
         extra = {k: v for k, v in meta.items() if k not in fijos}
         
         return cls(
@@ -72,7 +70,6 @@ class Chunk:
             doc_id=datos["doc_id"],
             texto=datos["texto"],
             fuente=meta.get("fuente", ""),
-            fenomeno=meta.get("fenomeno", 0),
             indice=meta.get("posicion", 0),
             seccion_path=meta.get("seccion_path", []),
             pagina=meta.get("pagina"),

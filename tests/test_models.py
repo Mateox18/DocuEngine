@@ -19,10 +19,9 @@ from lib.parser import (
 def _documento(**kwargs) -> ParsedDocument:
     """Documento minimo para los tests."""
     base = {
-        "doc_id": "DOC-1-00001",
+        "doc_id": "DOC-00001",
         "fuente": "informe.md",
         "formato": "md",
-        "fenomeno": 1,
         "ruta_original": "D:/corpus/informe.md",
     }
     base.update(kwargs)
@@ -88,7 +87,7 @@ def test_parsed_document_es_kw_only() -> None:
     # Congela la decision de kw_only: doc_id/fuente/formato/ruta_original son
     # todos str y un swap posicional pasaria desapercibido.
     with pytest.raises(TypeError):
-        ParsedDocument("DOC-1-00001", "informe.md", "md", 1, "D:/x.md")  # type: ignore[misc]
+        ParsedDocument("DOC-00001", "informe.md", "md", "D:/x.md")  # type: ignore[misc]
 
 
 def test_texto_completo_excluye_descartados() -> None:

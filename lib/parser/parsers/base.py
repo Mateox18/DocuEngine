@@ -94,17 +94,17 @@ class BaseParser(ABC):
         return cls.MAPA_FORMATOS.get(path.suffix.lower(), cls.FORMATO)
 
     @abstractmethod
-    def parse(self, path: Path, doc_id: str, fenomeno: int) -> ParsedDocument:
+    def parse(self, path: Path, doc_id: str) -> ParsedDocument:
         """Parsea un archivo y devuelve su representacion intermedia.
 
-        Debe llenar: doc_id, fuente, formato, fenomeno, ruta_original, blocks.
+        Debe llenar: doc_id, fuente, formato, ruta_original, blocks.
         Puede llenar: titulo, meta_extra, errores.
         NO debe llenar: idioma, hash_contenido, descartado (son de cleaning).
         Lanza ParserError si el archivo es irrecuperable.
         """
 
     def parse_seguro(
-        self, path: Path, doc_id: str, fenomeno: int
+        self, path: Path, doc_id: str
     ) -> tuple[ParsedDocument | None, ErrorParseo | None]:
         """Igual que parse() pero aisla el fallo en un ErrorParseo.
 
@@ -112,7 +112,7 @@ class BaseParser(ABC):
         detiene la ingesta". El selector lo llama en bucle.
         """
         try:
-            return self.parse(path, doc_id, fenomeno), None
+            return self.parse(path, doc_id), None
         except Exception as exc:  # noqa: BLE001 - aislamiento deliberado
             self.logger.exception("fallo al parsear %s", path)
             return None, ErrorParseo(
@@ -123,7 +123,7 @@ class BaseParser(ABC):
             )
 
     def _nuevo_documento(
-        self, path: Path, doc_id: str, fenomeno: int
+        self, path: Path, doc_id: str
     ) -> ParsedDocument:
         """Construye el ParsedDocument con la metadata base ya llena."""
         if not path.is_file():
@@ -138,7 +138,6 @@ class BaseParser(ABC):
             # sin normalizacion Unicode. Es la clave de emparejamiento.
             fuente=path.name,
             formato=self.formato_para(path),
-            fenomeno=fenomeno,
             # abspath() NO toca el filesystem: no resuelve symlinks ni reescribe
             # el casing real de Windows. resolve() si, y podria alterar el
             # nombre; por eso abspath.

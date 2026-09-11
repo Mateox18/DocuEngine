@@ -15,7 +15,7 @@ from conftest import EscribirBytes, LibroExcel
 
 
 def _parsear(ruta) -> ParsedDocument:
-    return TabularParser().parse(ruta, "DOC-1-00001", 1)
+    return TabularParser().parse(ruta, "DOC-00001")
 
 
 def _filas(doc: ParsedDocument) -> list[str]:
